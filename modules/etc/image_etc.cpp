@@ -106,9 +106,15 @@ static void _compress_etc(Image *p_img, float p_lossy_quality, bool force_etc1_f
 		// If VRAM compression is using ETC, but image has alpha, convert to RGBA4444 or LA8
 		// This saves space while maintaining the alpha channel
 		if (detected_channels == Image::USED_CHANNELS_RGBA) {
+			
+			if (p_img->has_mipmaps()) {
+				// Image doesn't support mipmaps with RGBA4444 textures
+				p_img->clear_mipmaps();
+			}
 			p_img->convert(Image::FORMAT_RGBA4444);
 			return;
 		} else if (detected_channels == Image::USE_CHANNELS_LA) {
+
 			p_img->convert(Image::FORMAT_LA8);
 			return;
 		}
@@ -121,8 +127,9 @@ static void _compress_etc(Image *p_img, float p_lossy_quality, bool force_etc1_f
 
 	Ref<Image> img = p_img->duplicate();
 
-	if (img->get_format() != Image::FORMAT_RGBA8)
+	if (img->get_format() != Image::FORMAT_RGBA8) {
 		img->convert(Image::FORMAT_RGBA8); //still uses RGBA to convert
+	}
 
 	if (img->has_mipmaps()) {
 		if (next_power_of_2(imgw) != imgw || next_power_of_2(imgh) != imgh) {
@@ -143,28 +150,29 @@ static void _compress_etc(Image *p_img, float p_lossy_quality, bool force_etc1_f
 		}
 	}
 
-	PoolVector<uint8_t>::Read r = img->get_data().read();
-	ERR_FAIL_COND(!r.ptr());
+	const uint8_t *r = img->get_data().ptr();
+	ERR_FAIL_COND(!r);
 
 	unsigned int target_size = Image::get_image_data_size(imgw, imgh, etc_format, p_img->has_mipmaps());
 	int mmc = 1 + (p_img->has_mipmaps() ? Image::get_image_required_mipmaps(imgw, imgh, etc_format) : 0);
 
-	PoolVector<uint8_t> dst_data;
+	Vector<uint8_t> dst_data;
 	dst_data.resize(target_size);
 
-	PoolVector<uint8_t>::Write w = dst_data.write();
+	uint8_t *w = dst_data.ptrw();
 
 	// prepare parameters to be passed to etc2comp
 	int num_cpus = OS::get_singleton()->get_processor_count();
 	int encoding_time = 0;
 	float effort = 0.0; //default, reasonable time
 
-	if (p_lossy_quality > 0.75)
+	if (p_lossy_quality > 0.75) {
 		effort = 0.4;
-	else if (p_lossy_quality > 0.85)
+	} else if (p_lossy_quality > 0.85) {
 		effort = 0.6;
-	else if (p_lossy_quality > 0.95)
+	} else if (p_lossy_quality > 0.95) {
 		effort = 0.8;
+	}
 
 	Etc::ErrorMetric error_metric = Etc::ErrorMetric::RGBX; // NOTE: we can experiment with other error metrics
 	Etc::Image::Format etc2comp_etc_format = _image_format_to_etc2comp_format(etc_format);
@@ -186,7 +194,7 @@ static void _compress_etc(Image *p_img, float p_lossy_quality, bool force_etc1_f
 			src_rgba_f[j] = Etc::ColorFloatRGBA::ConvertFromRGBA8(src[si], src[si + 1], src[si + 2], src[si + 3]);
 		}
 
-		unsigned char *etc_data = NULL;
+		unsigned char *etc_data = nullptr;
 		unsigned int etc_data_len = 0;
 		unsigned int extended_width = 0, extended_height = 0;
 		Etc::Encode((float *)src_rgba_f, mipmap_w, mipmap_h, etc2comp_etc_format, error_metric, effort, num_cpus, num_cpus, &etc_data, &etc_data_len, &extended_width, &extended_height, &encoding_time);
@@ -213,7 +221,6 @@ static void _compress_etc2(Image *p_img, float p_lossy_quality, Image::UsedChann
 }
 
 void _register_etc_compress_func() {
-
 	Image::_image_compress_etc1_func = _compress_etc1;
 	Image::_image_compress_etc2_func = _compress_etc2;
 }

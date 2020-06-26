@@ -36,7 +36,6 @@
 #include "scene/gui/dialogs.h"
 #include "scene/gui/tree.h"
 class EditorQuickOpen : public ConfirmationDialog {
-
 	GDCLASS(EditorQuickOpen, ConfirmationDialog);
 
 	LineEdit *search_box;
@@ -49,12 +48,14 @@ class EditorQuickOpen : public ConfirmationDialog {
 	void _update_search();
 
 	void _sbox_input(const Ref<InputEvent> &p_ie);
-	void _parse_fs(EditorFileSystemDirectory *efsd, Vector<Pair<String, Ref<Texture2D> > > &list);
-	Vector<Pair<String, Ref<Texture2D> > > _sort_fs(Vector<Pair<String, Ref<Texture2D> > > &list);
+	void _parse_fs(EditorFileSystemDirectory *efsd, Vector<Pair<String, Ref<Texture2D>>> &list);
+	Vector<Pair<String, Ref<Texture2D>>> _sort_fs(Vector<Pair<String, Ref<Texture2D>>> &list);
 	float _path_cmp(String search, String path) const;
 
 	void _confirmed();
 	void _text_changed(const String &p_newtext);
+
+	void _theme_changed();
 
 protected:
 	void _notification(int p_what);

@@ -41,13 +41,13 @@ protected:
 	static void _bind_methods();
 
 	//bind helpers
-	Error _put_data(const PoolVector<uint8_t> &p_data);
-	Array _put_partial_data(const PoolVector<uint8_t> &p_data);
+	Error _put_data(const Vector<uint8_t> &p_data);
+	Array _put_partial_data(const Vector<uint8_t> &p_data);
 
 	Array _get_data(int p_bytes);
 	Array _get_partial_data(int p_bytes);
 
-	bool big_endian;
+	bool big_endian = false;
 
 public:
 	virtual Error put_data(const uint8_t *p_data, int p_bytes) = 0; ///< put a whole chunk of data, blocking until it sent
@@ -89,15 +89,14 @@ public:
 	String get_utf8_string(int p_bytes = -1);
 	Variant get_var(bool p_allow_objects = false);
 
-	StreamPeer() { big_endian = false; }
+	StreamPeer() {}
 };
 
 class StreamPeerBuffer : public StreamPeer {
-
 	GDCLASS(StreamPeerBuffer, StreamPeer);
 
-	PoolVector<uint8_t> data;
-	int pointer;
+	Vector<uint8_t> data;
+	int pointer = 0;
 
 protected:
 	static void _bind_methods();
@@ -116,14 +115,14 @@ public:
 	int get_position() const;
 	void resize(int p_size);
 
-	void set_data_array(const PoolVector<uint8_t> &p_data);
-	PoolVector<uint8_t> get_data_array() const;
+	void set_data_array(const Vector<uint8_t> &p_data);
+	Vector<uint8_t> get_data_array() const;
 
 	void clear();
 
 	Ref<StreamPeerBuffer> duplicate() const;
 
-	StreamPeerBuffer();
+	StreamPeerBuffer() {}
 };
 
 #endif // STREAM_PEER_H

@@ -123,6 +123,7 @@ private:
 	void _delete_preset_confirm();
 	void _update_export_all();
 
+	void _force_update_current_preset_parameters();
 	void _update_current_preset();
 	void _update_presets();
 
@@ -167,6 +168,7 @@ private:
 	void _tab_changed(int);
 
 protected:
+	void _theme_changed();
 	void _notification(int p_what);
 	static void _bind_methods();
 

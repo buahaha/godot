@@ -33,7 +33,7 @@
 
 #include "broad_phase_2d_sw.h"
 #include "core/self_list.h"
-#include "servers/physics_2d_server.h"
+#include "servers/physics_server_2d.h"
 #include "shape_2d_sw.h"
 
 class Space2DSW;
@@ -53,7 +53,6 @@ private:
 	bool pickable;
 
 	struct Shape {
-
 		Transform2D xform;
 		Transform2D xform_inv;
 		BroadPhase2DSW::ID bpid;
@@ -186,7 +185,6 @@ public:
 	_FORCE_INLINE_ bool is_pickable() const { return pickable; }
 
 	_FORCE_INLINE_ bool test_collision_mask(CollisionObject2DSW *p_other) const {
-
 		return collision_layer & p_other->collision_mask || p_other->collision_layer & collision_mask;
 	}
 

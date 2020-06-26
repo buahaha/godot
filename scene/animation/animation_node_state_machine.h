@@ -134,7 +134,6 @@ public:
 };
 
 class AnimationNodeStateMachine : public AnimationRootNode {
-
 	GDCLASS(AnimationNodeStateMachine, AnimationRootNode);
 
 private:
@@ -148,7 +147,6 @@ private:
 	Map<StringName, State> states;
 
 	struct Transition {
-
 		StringName from;
 		StringName to;
 		Ref<AnimationNodeStateMachineTransition> transition;
@@ -178,6 +176,7 @@ public:
 	virtual Variant get_parameter_default_value(const StringName &p_parameter) const;
 
 	void add_node(const StringName &p_name, Ref<AnimationNode> p_node, const Vector2 &p_position = Vector2());
+	void replace_node(const StringName &p_name, Ref<AnimationNode> p_node);
 	Ref<AnimationNode> get_node(const StringName &p_name) const;
 	void remove_node(const StringName &p_name);
 	void rename_node(const StringName &p_name, const StringName &p_new_name);

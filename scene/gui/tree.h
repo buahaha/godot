@@ -40,7 +40,6 @@
 class Tree;
 
 class TreeItem : public Object {
-
 	GDCLASS(TreeItem, Object);
 
 public:
@@ -63,7 +62,6 @@ private:
 	friend class Tree;
 
 	struct Cell {
-
 		TreeCellMode mode;
 
 		Ref<Texture2D> icon;
@@ -111,7 +109,6 @@ private:
 		Vector<Button> buttons;
 
 		Cell() {
-
 			custom_draw_obj = ObjectID();
 			custom_button = false;
 			mode = TreeItem::CELL_MODE_STRING;
@@ -172,7 +169,7 @@ protected:
 		remove_child(Object::cast_to<TreeItem>(p_child));
 	}
 
-	Variant _call_recursive_bind(const Variant **p_args, int p_argcount, Variant::CallError &r_error);
+	Variant _call_recursive_bind(const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 
 public:
 	/* cell mode */
@@ -282,7 +279,7 @@ public:
 	void set_disable_folding(bool p_disable);
 	bool is_folding_disabled() const;
 
-	void call_recursive(const StringName &p_method, const Variant **p_args, int p_argcount, Variant::CallError &r_error);
+	void call_recursive(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 
 	~TreeItem();
 };
@@ -290,8 +287,9 @@ public:
 VARIANT_ENUM_CAST(TreeItem::TreeCellMode);
 VARIANT_ENUM_CAST(TreeItem::TextAlign);
 
-class Tree : public Control {
+class VBoxContainer;
 
+class Tree : public Control {
 	GDCLASS(Tree, Control);
 
 public:
@@ -348,7 +346,6 @@ private:
 	int drop_mode_flags;
 
 	struct ColumnInfo {
-
 		int min_width;
 		bool expand;
 		String title;
@@ -359,6 +356,10 @@ private:
 	};
 
 	bool show_column_titles;
+
+	VBoxContainer *popup_editor_vb;
+
+	PopupPanel *popup_editor;
 	LineEdit *text_editor;
 	HSlider *value_editor;
 	bool updating_value_editor;
@@ -377,9 +378,9 @@ private:
 	//void draw_item_text(String p_text,const Ref<Texture2D>& p_icon,int p_icon_max_w,bool p_tool,Rect2i p_rect,const Color& p_color);
 	void draw_item_rect(const TreeItem::Cell &p_cell, const Rect2i &p_rect, const Color &p_color, const Color &p_icon_color);
 	int draw_item(const Point2i &p_pos, const Point2 &p_draw_ofs, const Size2 &p_draw_size, TreeItem *p_item);
-	void select_single_item(TreeItem *p_selected, TreeItem *p_current, int p_col, TreeItem *p_prev = NULL, bool *r_in_range = NULL, bool p_force_deselect = false);
+	void select_single_item(TreeItem *p_selected, TreeItem *p_current, int p_col, TreeItem *p_prev = nullptr, bool *r_in_range = nullptr, bool p_force_deselect = false);
 	int propagate_mouse_event(const Point2i &p_pos, int x_ofs, int y_ofs, bool p_doubleclick, TreeItem *p_item, int p_button, const Ref<InputEventWithModifiers> &p_mod);
-	void text_editor_enter(String p_text);
+	void _text_editor_enter(String p_text);
 	void _text_editor_modal_close();
 	void value_editor_changed(double p_value);
 
@@ -398,7 +399,6 @@ private:
 	void propagate_set_columns(TreeItem *p_item);
 
 	struct Cache {
-
 		Ref<Font> font;
 		Ref<Font> tb_font;
 		Ref<StyleBox> bg;
@@ -538,7 +538,7 @@ public:
 
 	void clear();
 
-	TreeItem *create_item(TreeItem *p_parent = 0, int p_idx = -1);
+	TreeItem *create_item(TreeItem *p_parent = nullptr, int p_idx = -1);
 	TreeItem *get_root();
 	TreeItem *get_last_item();
 
@@ -578,7 +578,7 @@ public:
 	bool edit_selected();
 
 	// First item that starts with the text, from the current focused item down and wraps around.
-	TreeItem *search_item_text(const String &p_find, int *r_col = NULL, bool p_selectable = false);
+	TreeItem *search_item_text(const String &p_find, int *r_col = nullptr, bool p_selectable = false);
 	// First item that matches the whole text, from the first item down.
 	TreeItem *get_item_with_text(const String &p_find) const;
 

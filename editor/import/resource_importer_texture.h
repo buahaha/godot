@@ -35,9 +35,9 @@
 #include "core/io/resource_importer.h"
 #include "core/os/file_access.h"
 #include "scene/resources/texture.h"
-#include "servers/visual_server.h"
+#include "servers/rendering_server.h"
 
-class StreamTexture;
+class StreamTexture2D;
 
 class ResourceImporterTexture : public ResourceImporter {
 	GDCLASS(ResourceImporterTexture, ResourceImporter);
@@ -58,31 +58,30 @@ protected:
 		MAKE_NORMAL_FLAG = 4
 	};
 
-	Mutex *mutex;
+	Mutex mutex;
 	struct MakeInfo {
-
 		int flags;
 		String normal_path_for_roughness;
-		VS::TextureDetectRoughnessChannel channel_for_roughness;
+		RS::TextureDetectRoughnessChannel channel_for_roughness;
 		MakeInfo() {
 			flags = 0;
-			channel_for_roughness = VS::TEXTURE_DETECT_ROUGNHESS_R;
+			channel_for_roughness = RS::TEXTURE_DETECT_ROUGNHESS_R;
 		}
 	};
 
 	Map<StringName, MakeInfo> make_flags;
 
-	static void _texture_reimport_roughness(const Ref<StreamTexture> &p_tex, const String &p_normal_path, VisualServer::TextureDetectRoughnessChannel p_channel);
-	static void _texture_reimport_3d(const Ref<StreamTexture> &p_tex);
-	static void _texture_reimport_normal(const Ref<StreamTexture> &p_tex);
+	static void _texture_reimport_roughness(const Ref<StreamTexture2D> &p_tex, const String &p_normal_path, RenderingServer::TextureDetectRoughnessChannel p_channel);
+	static void _texture_reimport_3d(const Ref<StreamTexture2D> &p_tex);
+	static void _texture_reimport_normal(const Ref<StreamTexture2D> &p_tex);
 
 	static ResourceImporterTexture *singleton;
 	static const char *compression_formats[];
 
-	void _save_stex(const Ref<Image> &p_image, const String &p_to_path, CompressMode p_compress_mode, float p_lossy_quality, Image::CompressMode p_vram_compression, bool p_mipmaps, bool p_streamable, bool p_detect_3d, bool p_detect_srgb, bool p_force_rgbe, bool p_detect_normal, bool p_force_normal, bool p_srgb_friendly, bool p_force_po2_for_compressed, uint32_t p_limit_mipmap, const Ref<Image> &p_normal, Image::RoughnessChannel p_roughness_channel);
+	void _save_stex(const Ref<Image> &p_image, const String &p_to_path, CompressMode p_compress_mode, float p_lossy_quality, Image::CompressMode p_vram_compression, bool p_mipmaps, bool p_streamable, bool p_detect_3d, bool p_detect_srgb, bool p_detect_normal, bool p_force_normal, bool p_srgb_friendly, bool p_force_po2_for_compressed, uint32_t p_limit_mipmap, const Ref<Image> &p_normal, Image::RoughnessChannel p_roughness_channel);
 
 public:
-	void save_to_stex_format(FileAccess *f, const Ref<Image> &p_image, CompressMode p_compress_mode, Image::UsedChannels p_channels, Image::CompressMode p_compress_format, float p_lossy_quality, bool p_force_rgbe);
+	static void save_to_stex_format(FileAccess *f, const Ref<Image> &p_image, CompressMode p_compress_mode, Image::UsedChannels p_channels, Image::CompressMode p_compress_format, float p_lossy_quality);
 
 	static ResourceImporterTexture *get_singleton() { return singleton; }
 	virtual String get_importer_name() const;
@@ -94,7 +93,6 @@ public:
 	enum Preset {
 		PRESET_DETECT,
 		PRESET_2D,
-		PRESET_2D_PIXEL,
 		PRESET_3D,
 	};
 
@@ -104,7 +102,7 @@ public:
 	virtual void get_import_options(List<ImportOption> *r_options, int p_preset = 0) const;
 	virtual bool get_option_visibility(const String &p_option, const Map<StringName, Variant> &p_options) const;
 
-	virtual Error import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files = NULL, Variant *r_metadata = NULL);
+	virtual Error import(const String &p_source_file, const String &p_save_path, const Map<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files = nullptr, Variant *r_metadata = nullptr);
 
 	void update_imports();
 

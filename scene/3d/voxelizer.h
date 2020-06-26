@@ -32,7 +32,7 @@
 #define VOXEL_LIGHT_BAKER_H
 
 #include "core/math/vector3i.h"
-#include "scene/3d/mesh_instance.h"
+#include "scene/3d/mesh_instance_3d.h"
 #include "scene/resources/multimesh.h"
 
 class Voxelizer {
@@ -43,7 +43,6 @@ private:
 	};
 
 	struct Cell {
-
 		uint32_t children[8];
 		float albedo[3]; //albedo in RGB24
 		float emission[3]; //accumulated light in 16:16 fixed point (needs to be integer for moving lights fast)
@@ -109,7 +108,6 @@ private:
 	int color_scan_cell_width;
 	int bake_texture_size;
 	float cell_size;
-	float propagation;
 
 	int max_original_cells;
 	int leaf_voxel_count;
@@ -126,16 +124,16 @@ private:
 
 public:
 	void begin_bake(int p_subdiv, const AABB &p_bounds);
-	void plot_mesh(const Transform &p_xform, Ref<Mesh> &p_mesh, const Vector<Ref<Material> > &p_materials, const Ref<Material> &p_override_material);
+	void plot_mesh(const Transform &p_xform, Ref<Mesh> &p_mesh, const Vector<Ref<Material>> &p_materials, const Ref<Material> &p_override_material);
 	void end_bake();
 
 	int get_gi_probe_octree_depth() const;
 	Vector3i get_giprobe_octree_size() const;
 	int get_giprobe_cell_count() const;
-	PoolVector<uint8_t> get_giprobe_octree_cells() const;
-	PoolVector<uint8_t> get_giprobe_data_cells() const;
-	PoolVector<int> get_giprobe_level_cell_count() const;
-	PoolVector<uint8_t> get_sdf_3d_image() const;
+	Vector<uint8_t> get_giprobe_octree_cells() const;
+	Vector<uint8_t> get_giprobe_data_cells() const;
+	Vector<int> get_giprobe_level_cell_count() const;
+	Vector<uint8_t> get_sdf_3d_image() const;
 
 	Ref<MultiMesh> create_debug_multimesh();
 

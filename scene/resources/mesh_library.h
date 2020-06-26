@@ -34,17 +34,16 @@
 #include "core/map.h"
 #include "core/resource.h"
 #include "mesh.h"
-#include "scene/3d/navigation_mesh_instance.h"
-#include "shape.h"
+#include "scene/3d/navigation_region_3d.h"
+#include "shape_3d.h"
 
 class MeshLibrary : public Resource {
-
 	GDCLASS(MeshLibrary, Resource);
 	RES_BASE_EXTENSION("meshlib");
 
 public:
 	struct ShapeData {
-		Ref<Shape> shape;
+		Ref<Shape3D> shape;
 		Transform local_transform;
 	};
 	struct Item {

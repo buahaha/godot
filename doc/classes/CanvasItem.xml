@@ -9,6 +9,7 @@
 		Canvas items are drawn in tree order. By default, children are on top of their parents so a root [CanvasItem] will be drawn behind everything. This behavior can be changed on a per-item basis.
 		A [CanvasItem] can also be hidden, which will also hide its children. It provides many ways to change parameters such as modulation (for itself and its children) and self modulation (only for itself), as well as its blend mode.
 		Ultimately, a transform notification can be requested, which will notify the node that its global position changed in case the parent tree changed.
+		[b]Note:[/b] Unless otherwise specified, all methods that have angle parameters must have angles specified as [i]radians[/i]. To convert degrees to radians, use [method @GDScript.deg2rad].
 	</description>
 	<tutorials>
 		<link>https://docs.godotengine.org/en/latest/tutorials/2d/2d_transforms.html</link>
@@ -76,11 +77,11 @@
 		<method name="draw_colored_polygon">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
 			<argument index="1" name="color" type="Color">
 			</argument>
-			<argument index="2" name="uvs" type="PoolVector2Array" default="PoolVector2Array(  )">
+			<argument index="2" name="uvs" type="PackedVector2Array" default="PackedVector2Array(  )">
 			</argument>
 			<argument index="3" name="texture" type="Texture2D" default="null">
 			</argument>
@@ -88,7 +89,7 @@
 			</argument>
 			<argument index="5" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="6" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="6" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="7" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -118,17 +119,17 @@
 			</return>
 			<argument index="0" name="mesh" type="Mesh">
 			</argument>
-			<argument index="1" name="texture" type="Texture2D" default="null">
+			<argument index="1" name="texture" type="Texture2D">
 			</argument>
 			<argument index="2" name="normal_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="3" name="specular_map" type="Texture2D" default="Color( 1, 1, 1, 1 )">
+			<argument index="3" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="4" name="transform" type="Color" default="Transform2D( 1, 0, 0, 1, 0, 0 )">
+			<argument index="4" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
-			<argument index="5" name="modulate" type="Transform2D" default="Color( 1, 1, 1, 1 )">
+			<argument index="5" name="transform" type="Transform2D" default="Transform2D( 1, 0, 0, 1, 0, 0 )">
 			</argument>
-			<argument index="6" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="6" name="modulate" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="7" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -141,7 +142,7 @@
 		<method name="draw_multiline">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
 			<argument index="1" name="color" type="Color">
 			</argument>
@@ -154,9 +155,9 @@
 		<method name="draw_multiline_colors">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
-			<argument index="1" name="colors" type="PoolColorArray">
+			<argument index="1" name="colors" type="PackedColorArray">
 			</argument>
 			<argument index="2" name="width" type="float" default="1.0">
 			</argument>
@@ -169,13 +170,13 @@
 			</return>
 			<argument index="0" name="multimesh" type="MultiMesh">
 			</argument>
-			<argument index="1" name="texture" type="Texture2D" default="null">
+			<argument index="1" name="texture" type="Texture2D">
 			</argument>
 			<argument index="2" name="normal_map" type="Texture2D" default="null">
 			</argument>
 			<argument index="3" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="4" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="4" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="5" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -188,11 +189,11 @@
 		<method name="draw_polygon">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
-			<argument index="1" name="colors" type="PoolColorArray">
+			<argument index="1" name="colors" type="PackedColorArray">
 			</argument>
-			<argument index="2" name="uvs" type="PoolVector2Array" default="PoolVector2Array(  )">
+			<argument index="2" name="uvs" type="PackedVector2Array" default="PackedVector2Array(  )">
 			</argument>
 			<argument index="3" name="texture" type="Texture2D" default="null">
 			</argument>
@@ -200,7 +201,7 @@
 			</argument>
 			<argument index="5" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="6" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="6" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="7" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -213,7 +214,7 @@
 		<method name="draw_polyline">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
 			<argument index="1" name="color" type="Color">
 			</argument>
@@ -226,9 +227,9 @@
 		<method name="draw_polyline_colors">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
-			<argument index="1" name="colors" type="PoolColorArray">
+			<argument index="1" name="colors" type="PackedColorArray">
 			</argument>
 			<argument index="2" name="width" type="float" default="1.0">
 			</argument>
@@ -239,11 +240,11 @@
 		<method name="draw_primitive">
 			<return type="void">
 			</return>
-			<argument index="0" name="points" type="PoolVector2Array">
+			<argument index="0" name="points" type="PackedVector2Array">
 			</argument>
-			<argument index="1" name="colors" type="PoolColorArray">
+			<argument index="1" name="colors" type="PackedColorArray">
 			</argument>
-			<argument index="2" name="uvs" type="PoolVector2Array">
+			<argument index="2" name="uvs" type="PackedVector2Array">
 			</argument>
 			<argument index="3" name="texture" type="Texture2D" default="null">
 			</argument>
@@ -253,14 +254,14 @@
 			</argument>
 			<argument index="6" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="7" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="7" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="8" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
 			<argument index="9" name="texture_repeat" type="int" enum="CanvasItem.TextureRepeat" default="0">
 			</argument>
 			<description>
-				Draws a custom primitive. 1 point for a point, 2 points for a line, 3 points for a triangle and 4 points for a quad.
+				Draws a custom primitive. 1 point for a point, 2 points for a line, 3 points for a triangle, and 4 points for a quad.
 			</description>
 		</method>
 		<method name="draw_rect">
@@ -342,7 +343,7 @@
 			</argument>
 			<argument index="4" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="5" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="5" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="6" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -369,7 +370,7 @@
 			</argument>
 			<argument index="6" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="7" name="specular_shinness" type="Color" default="Color( 1, 1, 1, 1 )">
+			<argument index="7" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
 			<argument index="8" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -396,9 +397,9 @@
 			</argument>
 			<argument index="6" name="specular_map" type="Texture2D" default="null">
 			</argument>
-			<argument index="7" name="clip_uv" type="Color" default="true">
+			<argument index="7" name="specular_shininess" type="Color" default="Color( 1, 1, 1, 1 )">
 			</argument>
-			<argument index="8" name="specular_shinness" type="bool" default="Color( 1, 1, 1, 1 )">
+			<argument index="8" name="clip_uv" type="bool" default="true">
 			</argument>
 			<argument index="9" name="texture_filter" type="int" enum="CanvasItem.TextureFilter" default="0">
 			</argument>
@@ -426,7 +427,7 @@
 			<return type="RID">
 			</return>
 			<description>
-				Returns the canvas item RID used by [VisualServer] for this item.
+				Returns the canvas item RID used by [RenderingServer] for this item.
 			</description>
 		</method>
 		<method name="get_canvas_transform" qualifiers="const">
@@ -607,8 +608,10 @@
 			If [code]true[/code], the object draws on top of its parent.
 		</member>
 		<member name="texture_filter" type="int" setter="set_texture_filter" getter="get_texture_filter" enum="CanvasItem.TextureFilter" default="0">
+			The texture filtering mode to use on this [CanvasItem].
 		</member>
 		<member name="texture_repeat" type="int" setter="set_texture_repeat" getter="get_texture_repeat" enum="CanvasItem.TextureRepeat" default="0">
+			The texture repeating mode to use on this [CanvasItem].
 		</member>
 		<member name="use_parent_material" type="bool" setter="set_use_parent_material" getter="get_use_parent_material" default="false">
 			If [code]true[/code], the parent [CanvasItem]'s [member material] property is used as this one's material.
@@ -656,30 +659,45 @@
 			The [CanvasItem] has exited the canvas.
 		</constant>
 		<constant name="TEXTURE_FILTER_PARENT_NODE" value="0" enum="TextureFilter">
+			The [CanvasItem] will inherit the filter from its parent.
 		</constant>
 		<constant name="TEXTURE_FILTER_NEAREST" value="1" enum="TextureFilter">
+			The texture filter reads from the nearest pixel only. The simplest and fastest method of filtering. Useful for pixel art.
 		</constant>
 		<constant name="TEXTURE_FILTER_LINEAR" value="2" enum="TextureFilter">
+			The texture filter blends between the nearest four pixels. Use this for most cases where you want to avoid a pixelated style.
 		</constant>
-		<constant name="TEXTURE_FILTER_NEAREST_WITH_MIMPAMPS" value="3" enum="TextureFilter">
+		<constant name="TEXTURE_FILTER_NEAREST_WITH_MIPMAPS" value="3" enum="TextureFilter">
+			The texture filter reads from the nearest pixel in the nearest mipmap. This is the fastest way to read from textures with mipmaps.
 		</constant>
 		<constant name="TEXTURE_FILTER_LINEAR_WITH_MIPMAPS" value="4" enum="TextureFilter">
+			The texture filter blends between the nearest 4 pixels and between the nearest 2 mipmaps. Use this for non-pixel art textures that may be viewed at a low scale (e.g. due to [Camera2D] zoom), as mipmaps are important to smooth out pixels that are smaller than on-screen pixels.
 		</constant>
-		<constant name="TEXTURE_FILTER_NEAREST_WITH_MIMPAMPS_ANISOTROPIC" value="5" enum="TextureFilter">
+		<constant name="TEXTURE_FILTER_NEAREST_WITH_MIPMAPS_ANISOTROPIC" value="5" enum="TextureFilter">
+			The texture filter reads from the nearest pixel, but selects a mipmap based on the angle between the surface and the camera view. This reduces artifacts on surfaces that are almost in line with the camera.
+			[b]Note:[/b] This texture filter is rarely useful in 2D projects. [constant TEXTURE_FILTER_NEAREST_WITH_MIPMAPS] is usually more appropriate.
 		</constant>
 		<constant name="TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC" value="6" enum="TextureFilter">
+			The texture filter blends between the nearest 4 pixels and selects a mipmap based on the angle between the surface and the camera view. This reduces artifacts on surfaces that are almost in line with the camera. This is the slowest of the filtering options, but results in the highest quality texturing.
+			[b]Note:[/b] This texture filter is rarely useful in 2D projects. [constant TEXTURE_FILTER_LINEAR_WITH_MIPMAPS] is usually more appropriate.
 		</constant>
 		<constant name="TEXTURE_FILTER_MAX" value="7" enum="TextureFilter">
+			Represents the size of the [enum TextureFilter] enum.
 		</constant>
 		<constant name="TEXTURE_REPEAT_PARENT_NODE" value="0" enum="TextureRepeat">
+			The [CanvasItem] will inherit the filter from its parent.
 		</constant>
 		<constant name="TEXTURE_REPEAT_DISABLED" value="1" enum="TextureRepeat">
+			Texture will not repeat.
 		</constant>
 		<constant name="TEXTURE_REPEAT_ENABLED" value="2" enum="TextureRepeat">
+			Texture will repeat normally.
 		</constant>
 		<constant name="TEXTURE_REPEAT_MIRROR" value="3" enum="TextureRepeat">
+			Texture will repeat in a 2x2 tiled mode, where elements at even positions are mirrored.
 		</constant>
 		<constant name="TEXTURE_REPEAT_MAX" value="4" enum="TextureRepeat">
+			Represents the size of the [enum TextureRepeat] enum.
 		</constant>
 	</constants>
 </class>

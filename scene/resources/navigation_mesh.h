@@ -36,10 +36,9 @@
 class Mesh;
 
 class NavigationMesh : public Resource {
-
 	GDCLASS(NavigationMesh, Resource);
 
-	PoolVector<Vector3> vertices;
+	Vector<Vector3> vertices;
 	struct Polygon {
 		Vector<int> indices;
 	};
@@ -47,7 +46,6 @@ class NavigationMesh : public Resource {
 	Ref<ArrayMesh> debug_mesh;
 
 	struct _EdgeKey {
-
 		Vector3 from;
 		Vector3 to;
 
@@ -179,8 +177,8 @@ public:
 
 	void create_from_mesh(const Ref<Mesh> &p_mesh);
 
-	void set_vertices(const PoolVector<Vector3> &p_vertices);
-	PoolVector<Vector3> get_vertices() const;
+	void set_vertices(const Vector<Vector3> &p_vertices);
+	Vector<Vector3> get_vertices() const;
 
 	void add_polygon(const Vector<int> &p_polygon);
 	int get_polygon_count() const;

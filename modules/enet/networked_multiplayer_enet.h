@@ -31,13 +31,13 @@
 #ifndef NETWORKED_MULTIPLAYER_ENET_H
 #define NETWORKED_MULTIPLAYER_ENET_H
 
+#include "core/crypto/crypto.h"
 #include "core/io/compression.h"
 #include "core/io/networked_multiplayer_peer.h"
 
 #include <enet/enet.h>
 
 class NetworkedMultiplayerENet : public NetworkedMultiplayerPeer {
-
 	GDCLASS(NetworkedMultiplayerENet, NetworkedMultiplayerPeer);
 
 public:
@@ -85,7 +85,6 @@ private:
 	Map<int, ENetPeer *> peer_map;
 
 	struct Packet {
-
 		ENetPacket *packet;
 		int from;
 		int channel;
@@ -110,6 +109,11 @@ private:
 	void _setup_compressor();
 
 	IP_Address bind_ip;
+
+	bool dtls_enabled;
+	Ref<CryptoKey> dtls_key;
+	Ref<X509Certificate> dtls_cert;
+	bool dtls_verify;
 
 protected:
 	static void _bind_methods();
@@ -166,6 +170,12 @@ public:
 	~NetworkedMultiplayerENet();
 
 	void set_bind_ip(const IP_Address &p_ip);
+	void set_dtls_enabled(bool p_enabled);
+	bool is_dtls_enabled() const;
+	void set_dtls_verify_enabled(bool p_enabled);
+	bool is_dtls_verify_enabled() const;
+	void set_dtls_key(Ref<CryptoKey> p_key);
+	void set_dtls_certificate(Ref<X509Certificate> p_cert);
 };
 
 VARIANT_ENUM_CAST(NetworkedMultiplayerENet::CompressionMode);

@@ -31,11 +31,10 @@
 #ifndef GIPROBE_H
 #define GIPROBE_H
 
-#include "multimesh_instance.h"
-#include "scene/3d/visual_instance.h"
+#include "multimesh_instance_3d.h"
+#include "scene/3d/visual_instance_3d.h"
 
 class GIProbeData : public Resource {
-
 	GDCLASS(GIProbeData, Resource);
 
 	RID probe;
@@ -63,13 +62,13 @@ protected:
 	void _validate_property(PropertyInfo &property) const;
 
 public:
-	void allocate(const Transform &p_to_cell_xform, const AABB &p_aabb, const Vector3 &p_octree_size, const PoolVector<uint8_t> &p_octree_cells, const PoolVector<uint8_t> &p_data_cells, const PoolVector<uint8_t> &p_distance_field, const PoolVector<int> &p_level_counts);
+	void allocate(const Transform &p_to_cell_xform, const AABB &p_aabb, const Vector3 &p_octree_size, const Vector<uint8_t> &p_octree_cells, const Vector<uint8_t> &p_data_cells, const Vector<uint8_t> &p_distance_field, const Vector<int> &p_level_counts);
 	AABB get_bounds() const;
 	Vector3 get_octree_size() const;
-	PoolVector<uint8_t> get_octree_cells() const;
-	PoolVector<uint8_t> get_data_cells() const;
-	PoolVector<uint8_t> get_distance_field() const;
-	PoolVector<int> get_level_counts() const;
+	Vector<uint8_t> get_octree_cells() const;
+	Vector<uint8_t> get_data_cells() const;
+	Vector<uint8_t> get_distance_field() const;
+	Vector<int> get_level_counts() const;
 	Transform get_to_cell_xform() const;
 
 	void set_dynamic_range(float p_range);
@@ -108,8 +107,8 @@ public:
 	~GIProbeData();
 };
 
-class GIProbe : public VisualInstance {
-	GDCLASS(GIProbe, VisualInstance);
+class GIProbe : public VisualInstance3D {
+	GDCLASS(GIProbe, VisualInstance3D);
 
 public:
 	enum Subdiv {
@@ -135,7 +134,7 @@ private:
 
 	struct PlotMesh {
 		Ref<Material> override_material;
-		Vector<Ref<Material> > instance_materials;
+		Vector<Ref<Material>> instance_materials;
 		Ref<Mesh> mesh;
 		Transform local_xform;
 	};
@@ -161,10 +160,10 @@ public:
 	Vector3 get_extents() const;
 	Vector3i get_estimated_cell_size() const;
 
-	void bake(Node *p_from_node = NULL, bool p_create_visual_debug = false);
+	void bake(Node *p_from_node = nullptr, bool p_create_visual_debug = false);
 
 	virtual AABB get_aabb() const;
-	virtual PoolVector<Face3> get_faces(uint32_t p_usage_flags) const;
+	virtual Vector<Face3> get_faces(uint32_t p_usage_flags) const;
 
 	virtual String get_configuration_warning() const;
 

@@ -34,7 +34,6 @@
 #include "core/resource.h"
 
 class PackedDataContainer : public Resource {
-
 	GDCLASS(PackedDataContainer, Resource);
 
 	enum {
@@ -48,8 +47,8 @@ class PackedDataContainer : public Resource {
 		bool operator<(const DictKey &p_key) const { return hash < p_key.hash; }
 	};
 
-	PoolVector<uint8_t> data;
-	int datalen;
+	Vector<uint8_t> data;
+	int datalen = 0;
 
 	uint32_t _pack(const Variant &p_data, Vector<uint8_t> &tmpdata, Map<String, uint32_t> &string_cache);
 
@@ -68,17 +67,17 @@ class PackedDataContainer : public Resource {
 	int _size(uint32_t p_ofs) const;
 
 protected:
-	void _set_data(const PoolVector<uint8_t> &p_data);
-	PoolVector<uint8_t> _get_data() const;
+	void _set_data(const Vector<uint8_t> &p_data);
+	Vector<uint8_t> _get_data() const;
 	static void _bind_methods();
 
 public:
-	virtual Variant getvar(const Variant &p_key, bool *r_valid = NULL) const;
+	virtual Variant getvar(const Variant &p_key, bool *r_valid = nullptr) const;
 	Error pack(const Variant &p_data);
 
 	int size() const;
 
-	PackedDataContainer();
+	PackedDataContainer() {}
 };
 
 class PackedDataContainerRef : public Reference {
@@ -98,9 +97,9 @@ public:
 	bool _is_dictionary() const;
 
 	int size() const;
-	virtual Variant getvar(const Variant &p_key, bool *r_valid = NULL) const;
+	virtual Variant getvar(const Variant &p_key, bool *r_valid = nullptr) const;
 
-	PackedDataContainerRef();
+	PackedDataContainerRef() {}
 };
 
 #endif // PACKED_DATA_CONTAINER_H

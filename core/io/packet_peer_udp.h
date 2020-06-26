@@ -47,13 +47,14 @@ protected:
 	uint8_t recv_buffer[PACKET_BUFFER_SIZE];
 	uint8_t packet_buffer[PACKET_BUFFER_SIZE];
 	IP_Address packet_ip;
-	int packet_port;
-	int queue_count;
+	int packet_port = 0;
+	int queue_count = 0;
 
 	IP_Address peer_addr;
-	int peer_port;
-	bool blocking;
-	bool broadcast;
+	int peer_port = 0;
+	bool connected = false;
+	bool blocking = true;
+	bool broadcast = false;
 	Ref<NetSocket> _sock;
 
 	static void _bind_methods();
@@ -70,6 +71,11 @@ public:
 	void close();
 	Error wait();
 	bool is_listening() const;
+
+	Error connect_socket(Ref<NetSocket> p_sock); // Used by UDPServer
+	Error connect_to_host(const IP_Address &p_host, int p_port);
+	bool is_connected_to_host() const;
+
 	IP_Address get_packet_address() const;
 	int get_packet_port() const;
 	void set_dest_address(const IP_Address &p_address, int p_port);

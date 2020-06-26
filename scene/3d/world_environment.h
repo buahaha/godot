@@ -31,10 +31,9 @@
 #ifndef SCENARIO_FX_H
 #define SCENARIO_FX_H
 
-#include "scene/3d/spatial.h"
+#include "scene/3d/node_3d.h"
 
 class WorldEnvironment : public Node {
-
 	GDCLASS(WorldEnvironment, Node);
 
 	Ref<Environment> environment;

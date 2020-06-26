@@ -114,7 +114,7 @@ class VisualScriptEditor : public ScriptEditorBase {
 	UndoRedo *undo_redo;
 
 	Tree *members;
-	PopupDialog *function_name_edit;
+	AcceptDialog *function_name_edit;
 	LineEdit *function_name_box;
 
 	Label *hint_text;
@@ -133,10 +133,10 @@ class VisualScriptEditor : public ScriptEditorBase {
 		String name;
 		Variant::Type ret;
 		bool ret_variant;
-		Vector<Pair<Variant::Type, String> > args;
+		Vector<Pair<Variant::Type, String>> args;
 	};
 
-	HashMap<StringName, Ref<StyleBox> > node_styles;
+	HashMap<StringName, Ref<StyleBox>> node_styles;
 	StringName edited_func;
 	StringName default_func;
 
@@ -152,8 +152,7 @@ class VisualScriptEditor : public ScriptEditorBase {
 	String _validate_name(const String &p_name) const;
 
 	struct Clipboard {
-
-		Map<int, Ref<VisualScriptNode> > nodes;
+		Map<int, Ref<VisualScriptNode>> nodes;
 		Map<int, Vector2> nodes_positions;
 
 		Set<VisualScript::SequenceConnection> sequence_connections;
@@ -298,7 +297,7 @@ public:
 	virtual Vector<String> get_functions();
 	virtual void reload_text();
 	virtual String get_name();
-	virtual Ref<Texture2D> get_icon();
+	virtual Ref<Texture2D> get_theme_icon();
 	virtual bool is_unsaved();
 	virtual Variant get_edit_state();
 	virtual void set_edit_state(const Variant &p_state);
@@ -313,7 +312,7 @@ public:
 	virtual void tag_saved_version();
 	virtual void reload(bool p_soft);
 	virtual void get_breakpoints(List<int> *p_breakpoints);
-	virtual void add_callback(const String &p_function, PoolStringArray p_args);
+	virtual void add_callback(const String &p_function, PackedStringArray p_args);
 	virtual void update_settings();
 	virtual bool show_members_overview();
 	virtual void set_debugger_active(bool p_active);
@@ -341,7 +340,7 @@ protected:
 	static void _bind_methods();
 	static _VisualScriptEditor *singleton;
 
-	static Map<String, RefPtr> custom_nodes;
+	static Map<String, REF> custom_nodes;
 	static Ref<VisualScriptNode> create_node_custom(const String &p_name);
 
 public:

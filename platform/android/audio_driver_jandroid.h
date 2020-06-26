@@ -36,8 +36,7 @@
 #include "java_godot_lib_jni.h"
 
 class AudioDriverAndroid : public AudioDriver {
-
-	static Mutex *mutex;
+	static Mutex mutex;
 	static AudioDriverAndroid *s_ad;
 	static jobject io;
 	static jmethodID _init_audio;

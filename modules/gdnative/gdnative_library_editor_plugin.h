@@ -36,7 +36,6 @@
 #include "gdnative.h"
 
 class GDNativeLibraryEditor : public Control {
-
 	GDCLASS(GDNativeLibraryEditor, Control);
 
 	struct NativePlatformConfig {
@@ -77,7 +76,7 @@ protected:
 	void _update_tree();
 	void _on_item_button(Object *item, int column, int id);
 	void _on_library_selected(const String &file);
-	void _on_dependencies_selected(const PoolStringArray &files);
+	void _on_dependencies_selected(const PackedStringArray &files);
 	void _on_filter_selected(int id);
 	void _on_item_collapsed(Object *p_item);
 	void _on_item_activated();
@@ -94,7 +93,6 @@ public:
 };
 
 class GDNativeLibraryEditorPlugin : public EditorPlugin {
-
 	GDCLASS(GDNativeLibraryEditorPlugin, EditorPlugin);
 
 	GDNativeLibraryEditor *library_editor;

@@ -41,6 +41,10 @@ class VisualShaderNode;
 class VisualShader : public Shader {
 	GDCLASS(VisualShader, Shader);
 
+	friend class VisualShaderNodeVersionChecker;
+
+	String version = "";
+
 public:
 	enum Type {
 		TYPE_VERTEX,
@@ -94,7 +98,6 @@ private:
 	void _queue_update();
 
 	union ConnectionKey {
-
 		struct {
 			uint64_t node : 32;
 			uint64_t port : 32;
@@ -118,6 +121,11 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 
 public:
+	void set_version(const String &p_version);
+	String get_version() const;
+
+	void update_version(const String &p_new_version);
+
 	enum {
 		NODE_ID_INVALID = -1,
 		NODE_ID_OUTPUT = 0,
@@ -182,6 +190,7 @@ protected:
 public:
 	enum PortType {
 		PORT_TYPE_SCALAR,
+		PORT_TYPE_SCALAR_INT,
 		PORT_TYPE_VECTOR,
 		PORT_TYPE_BOOLEAN,
 		PORT_TYPE_TRANSFORM,
@@ -359,18 +368,37 @@ public:
 class VisualShaderNodeUniform : public VisualShaderNode {
 	GDCLASS(VisualShaderNodeUniform, VisualShaderNode);
 
+public:
+	enum Qualifier {
+		QUAL_NONE,
+		QUAL_GLOBAL,
+		QUAL_INSTANCE,
+	};
+
 private:
 	String uniform_name;
+	Qualifier qualifier;
 
 protected:
 	static void _bind_methods();
+	String _get_qual_str() const;
 
 public:
 	void set_uniform_name(const String &p_name);
 	String get_uniform_name() const;
 
+	void set_qualifier(Qualifier p_qual);
+	Qualifier get_qualifier() const;
+
+	virtual bool is_qualifier_supported(Qualifier p_qual) const = 0;
+
+	virtual Vector<StringName> get_editable_properties() const;
+	virtual String get_warning(Shader::Mode p_mode, VisualShader::Type p_type) const;
+
 	VisualShaderNodeUniform();
 };
+
+VARIANT_ENUM_CAST(VisualShaderNodeUniform::Qualifier)
 
 class VisualShaderNodeGroupBase : public VisualShaderNode {
 	GDCLASS(VisualShaderNodeGroupBase, VisualShaderNode);

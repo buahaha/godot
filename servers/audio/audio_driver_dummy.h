@@ -37,9 +37,8 @@
 #include "core/os/thread.h"
 
 class AudioDriverDummy : public AudioDriver {
-
-	Thread *thread;
-	Mutex *mutex;
+	Thread *thread = nullptr;
+	Mutex mutex;
 
 	int32_t *samples_in;
 
@@ -68,8 +67,8 @@ public:
 	virtual void unlock();
 	virtual void finish();
 
-	AudioDriverDummy();
-	~AudioDriverDummy();
+	AudioDriverDummy() {}
+	~AudioDriverDummy() {}
 };
 
 #endif

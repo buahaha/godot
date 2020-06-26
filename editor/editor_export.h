@@ -43,7 +43,6 @@ class EditorFileSystemDirectory;
 struct EditorProgress;
 
 class EditorExportPreset : public Reference {
-
 	GDCLASS(EditorExportPreset, Reference);
 
 public:
@@ -61,14 +60,14 @@ public:
 
 private:
 	Ref<EditorExportPlatform> platform;
-	ExportFilter export_filter;
+	ExportFilter export_filter = EXPORT_ALL_RESOURCES;
 	String include_filter;
 	String exclude_filter;
 	String export_path;
 
 	String exporter;
 	Set<String> selected_files;
-	bool runnable;
+	bool runnable = false;
 
 	Vector<String> patches;
 
@@ -82,7 +81,7 @@ private:
 
 	String custom_features;
 
-	int script_mode;
+	int script_mode = MODE_SCRIPT_COMPILED;
 	String script_key;
 
 protected:
@@ -94,6 +93,8 @@ public:
 	Ref<EditorExportPlatform> get_platform() const;
 
 	bool has(const StringName &p_property) const { return values.has(p_property); }
+
+	void update_files_to_export();
 
 	Vector<String> get_files_to_export() const;
 
@@ -136,7 +137,7 @@ public:
 
 	const List<PropertyInfo> &get_properties() const { return properties; }
 
-	EditorExportPreset();
+	EditorExportPreset() {}
 };
 
 struct SharedObject {
@@ -152,7 +153,6 @@ struct SharedObject {
 };
 
 class EditorExportPlatform : public Reference {
-
 	GDCLASS(EditorExportPlatform, Reference);
 
 public:
@@ -161,7 +161,6 @@ public:
 
 private:
 	struct SavedData {
-
 		uint64_t ofs;
 		uint64_t size;
 		Vector<uint8_t> md5;
@@ -173,7 +172,6 @@ private:
 	};
 
 	struct PackData {
-
 		FileAccess *f;
 		Vector<SavedData> file_ofs;
 		EditorProgress *ep;
@@ -181,14 +179,13 @@ private:
 	};
 
 	struct ZipData {
-
 		void *zip;
 		EditorProgress *ep;
 	};
 
 	struct FeatureContainers {
 		Set<String> features;
-		PoolVector<String> features_pv;
+		Vector<String> features_pv;
 	};
 
 	void _export_find_resources(EditorFileSystemDirectory *p_dir, Set<String> &p_paths);
@@ -212,7 +209,7 @@ protected:
 	FeatureContainers get_feature_containers(const Ref<EditorExportPreset> &p_preset);
 
 	bool exists_export_template(String template_file_name, String *err) const;
-	String find_export_template(String template_file_name, String *err = NULL) const;
+	String find_export_template(String template_file_name, String *err = nullptr) const;
 	void gen_export_flags(Vector<String> &r_flags, int p_flags);
 
 public:
@@ -232,15 +229,16 @@ public:
 	virtual Ref<EditorExportPreset> create_preset();
 
 	virtual void get_export_options(List<ExportOption> *r_options) = 0;
+	virtual bool should_update_export_options() { return false; }
 	virtual bool get_option_visibility(const String &p_option, const Map<StringName, Variant> &p_options) const { return true; }
 
 	virtual String get_os_name() const = 0;
 	virtual String get_name() const = 0;
 	virtual Ref<Texture2D> get_logo() const = 0;
 
-	Error export_project_files(const Ref<EditorExportPreset> &p_preset, EditorExportSaveFunction p_func, void *p_udata, EditorExportSaveSharedObject p_so_func = NULL);
+	Error export_project_files(const Ref<EditorExportPreset> &p_preset, EditorExportSaveFunction p_func, void *p_udata, EditorExportSaveSharedObject p_so_func = nullptr);
 
-	Error save_pack(const Ref<EditorExportPreset> &p_preset, const String &p_path, Vector<SharedObject> *p_so_files = NULL, bool p_embed = false, int64_t *r_embedded_start = NULL, int64_t *r_embedded_size = NULL);
+	Error save_pack(const Ref<EditorExportPreset> &p_preset, const String &p_path, Vector<SharedObject> *p_so_files = nullptr, bool p_embed = false, int64_t *r_embedded_start = nullptr, int64_t *r_embedded_size = nullptr);
 	Error save_zip(const Ref<EditorExportPreset> &p_preset, const String &p_path);
 
 	virtual bool poll_export() { return false; }
@@ -270,6 +268,7 @@ public:
 	virtual Error export_zip(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int p_flags = 0);
 	virtual void get_platform_features(List<String> *r_features) = 0;
 	virtual void resolve_platform_feature_priorities(const Ref<EditorExportPreset> &p_preset, Set<String> &p_features) = 0;
+	virtual String get_debug_protocol() const { return "tcp://"; }
 
 	EditorExportPlatform();
 };
@@ -291,6 +290,7 @@ class EditorExportPlugin : public Reference {
 	bool skipped;
 
 	Vector<String> ios_frameworks;
+	Vector<String> ios_project_static_libs;
 	String ios_plist_content;
 	String ios_linker_flags;
 	Vector<String> ios_bundle_files;
@@ -310,8 +310,8 @@ class EditorExportPlugin : public Reference {
 		ios_cpp_code = "";
 	}
 
-	void _export_file_script(const String &p_path, const String &p_type, const PoolVector<String> &p_features);
-	void _export_begin_script(const PoolVector<String> &p_features, bool p_debug, const String &p_path, int p_flags);
+	void _export_file_script(const String &p_path, const String &p_type, const Vector<String> &p_features);
+	void _export_begin_script(const Vector<String> &p_features, bool p_debug, const String &p_path, int p_flags);
 	void _export_end_script();
 
 protected:
@@ -322,6 +322,7 @@ protected:
 	void add_shared_object(const String &p_path, const Vector<String> &tags);
 
 	void add_ios_framework(const String &p_path);
+	void add_ios_project_static_lib(const String &p_path);
 	void add_ios_plist_content(const String &p_plist_content);
 	void add_ios_linker_flags(const String &p_flags);
 	void add_ios_bundle_file(const String &p_path);
@@ -336,6 +337,7 @@ protected:
 
 public:
 	Vector<String> get_ios_frameworks() const;
+	Vector<String> get_ios_project_static_libs() const;
 	String get_ios_plist_content() const;
 	String get_ios_linker_flags() const;
 	Vector<String> get_ios_bundle_files() const;
@@ -347,9 +349,11 @@ public:
 class EditorExport : public Node {
 	GDCLASS(EditorExport, Node);
 
-	Vector<Ref<EditorExportPlatform> > export_platforms;
-	Vector<Ref<EditorExportPreset> > export_presets;
-	Vector<Ref<EditorExportPlugin> > export_plugins;
+	Vector<Ref<EditorExportPlatform>> export_platforms;
+	Vector<Ref<EditorExportPreset>> export_presets;
+	Vector<Ref<EditorExportPlugin>> export_plugins;
+
+	StringName _export_presets_updated;
 
 	Timer *save_timer;
 	bool block_save;
@@ -379,10 +383,10 @@ public:
 
 	void add_export_plugin(const Ref<EditorExportPlugin> &p_plugin);
 	void remove_export_plugin(const Ref<EditorExportPlugin> &p_plugin);
-	Vector<Ref<EditorExportPlugin> > get_export_plugins();
+	Vector<Ref<EditorExportPlugin>> get_export_plugins();
 
 	void load_config();
-
+	void update_export_presets();
 	bool poll_export_platforms();
 
 	EditorExport();
@@ -390,7 +394,6 @@ public:
 };
 
 class EditorExportPlatformPC : public EditorExportPlatform {
-
 	GDCLASS(EditorExportPlatformPC, EditorExportPlatform);
 
 public:
@@ -452,7 +455,6 @@ public:
 };
 
 class EditorExportTextSceneToBinaryPlugin : public EditorExportPlugin {
-
 	GDCLASS(EditorExportTextSceneToBinaryPlugin, EditorExportPlugin);
 
 public:

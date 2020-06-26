@@ -32,7 +32,7 @@
 #define TILE_SET_EDITOR_PLUGIN_H
 
 #include "editor/editor_node.h"
-#include "scene/2d/sprite.h"
+#include "scene/2d/sprite_2d.h"
 #include "scene/resources/concave_polygon_shape_2d.h"
 #include "scene/resources/convex_polygon_shape_2d.h"
 #include "scene/resources/tile_set.h"
@@ -41,13 +41,12 @@
 class TilesetEditorContext;
 
 class TileSetEditor : public HSplitContainer {
-
 	friend class TileSetEditorPlugin;
 	friend class TilesetEditorContext;
 
 	GDCLASS(TileSetEditor, HSplitContainer);
 
-	enum TextureToolButtons {
+	enum TextureButtons {
 		TOOL_TILESET_ADD_TEXTURE,
 		TOOL_TILESET_REMOVE_TEXTURE,
 		TOOL_TILESET_CREATE_SCENE,
@@ -112,9 +111,9 @@ class TileSetEditor : public HSplitContainer {
 
 	ItemList *texture_list;
 	int option;
-	ToolButton *tileset_toolbar_buttons[TOOL_TILESET_MAX];
+	Button *tileset_toolbar_buttons[TOOL_TILESET_MAX];
 	MenuButton *tileset_toolbar_tools;
-	Map<RID, Ref<Texture2D> > texture_map;
+	Map<RID, Ref<Texture2D>> texture_map;
 
 	bool creating_shape;
 	int dragging_point;
@@ -123,7 +122,7 @@ class TileSetEditor : public HSplitContainer {
 	Rect2 edited_region;
 	bool draw_edited_region;
 	Vector2 edited_shape_coord;
-	PoolVector2Array current_shape;
+	PackedVector2Array current_shape;
 	Map<Vector2i, SubtileData> current_tile_data;
 	Map<Vector2, uint32_t> bitmask_map_copy;
 
@@ -136,7 +135,7 @@ class TileSetEditor : public HSplitContainer {
 	Ref<NavigationPolygon> edited_navigation_shape;
 
 	int current_item_index;
-	Sprite *preview;
+	Sprite2D *preview;
 	ScrollContainer *scroll;
 	Label *empty_message;
 	Control *workspace_container;
@@ -147,7 +146,7 @@ class TileSetEditor : public HSplitContainer {
 	Button *tool_editmode[EDITMODE_MAX];
 	HSeparator *separator_editmode;
 	HBoxContainer *toolbar;
-	ToolButton *tools[TOOL_MAX];
+	Button *tools[TOOL_MAX];
 	VSeparator *separator_shape_toggle;
 	VSeparator *separator_bitmask;
 	VSeparator *separator_delete;
@@ -178,7 +177,7 @@ class TileSetEditor : public HSplitContainer {
 	Variant get_drag_data_fw(const Point2 &p_point, Control *p_from);
 	bool can_drop_data_fw(const Point2 &p_point, const Variant &p_data, Control *p_from) const;
 	void drop_data_fw(const Point2 &p_point, const Variant &p_data, Control *p_from);
-	void _file_load_request(const PoolVector<String> &p_path, int p_at_pos = -1);
+	void _file_load_request(const Vector<String> &p_path, int p_at_pos = -1);
 
 protected:
 	static void _bind_methods();
@@ -195,12 +194,13 @@ private:
 	void _on_tileset_toolbar_button_pressed(int p_index);
 	void _on_tileset_toolbar_confirm();
 	void _on_texture_list_selected(int p_index);
-	void _on_textures_added(const PoolStringArray &p_paths);
+	void _on_textures_added(const PackedStringArray &p_paths);
 	void _on_edit_mode_changed(int p_edit_mode);
 	void _on_workspace_mode_changed(int p_workspace_mode);
 	void _on_workspace_overlay_draw();
 	void _on_workspace_draw();
 	void _on_workspace_process();
+	void _on_scroll_container_input(const Ref<InputEvent> &p_event);
 	void _on_workspace_input(const Ref<InputEvent> &p_ie);
 	void _on_tool_clicked(int p_tool);
 	void _on_priority_changed(float val);
@@ -252,7 +252,6 @@ private:
 };
 
 class TilesetEditorContext : public Object {
-
 	friend class TileSetEditor;
 	GDCLASS(TilesetEditorContext, Object);
 
@@ -278,7 +277,6 @@ public:
 };
 
 class TileSetEditorPlugin : public EditorPlugin {
-
 	GDCLASS(TileSetEditorPlugin, EditorPlugin);
 
 	TileSetEditor *tileset_editor;

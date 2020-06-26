@@ -35,9 +35,7 @@
 #include "core/ustring.h"
 
 class NodePath {
-
 	struct Data {
-
 		SafeRefCount refcount;
 		Vector<StringName> path;
 		Vector<StringName> subpath;
@@ -48,21 +46,12 @@ class NodePath {
 		mutable uint32_t hash_cache;
 	};
 
-	mutable Data *data;
+	mutable Data *data = nullptr;
 	void unref();
 
 	void _update_hash_cache() const;
 
 public:
-	_FORCE_INLINE_ StringName get_sname() const {
-
-		if (data && data->path.size() == 1 && data->subpath.empty()) {
-			return data->path[0];
-		} else {
-			return operator String();
-		}
-	}
-
 	bool is_absolute() const;
 	int get_name_count() const;
 	StringName get_name(int p_idx) const;
@@ -80,8 +69,9 @@ public:
 	NodePath get_parent() const;
 
 	_FORCE_INLINE_ uint32_t hash() const {
-		if (!data)
+		if (!data) {
 			return 0;
+		}
 		if (!data->hash_cache_valid) {
 			_update_hash_cache();
 		}
@@ -102,8 +92,8 @@ public:
 	NodePath(const Vector<StringName> &p_path, const Vector<StringName> &p_subpath, bool p_absolute);
 	NodePath(const NodePath &p_path);
 	NodePath(const String &p_path);
-	NodePath();
+	NodePath() {}
 	~NodePath();
 };
 
-#endif
+#endif // NODE_PATH_H

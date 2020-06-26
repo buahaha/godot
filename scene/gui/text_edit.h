@@ -39,7 +39,6 @@
 class SyntaxHighlighter;
 
 class TextEdit : public Control {
-
 	GDCLASS(TextEdit, Control);
 
 public:
@@ -48,7 +47,6 @@ public:
 	};
 
 	struct ColorRegion {
-
 		Color color;
 		String begin_key;
 		String end_key;
@@ -66,7 +64,6 @@ public:
 	class Text {
 	public:
 		struct ColorRegionInfo {
-
 			int region;
 			bool end;
 			ColorRegionInfo() {
@@ -168,7 +165,6 @@ private:
 	} cursor;
 
 	struct Selection {
-
 		enum Mode {
 
 			MODE_NONE,
@@ -207,7 +203,6 @@ private:
 	} selection;
 
 	struct Cache {
-
 		Ref<Texture2D> tab_icon;
 		Ref<Texture2D> space_icon;
 		Ref<Texture2D> can_fold_icon;
@@ -256,7 +251,6 @@ private:
 		int info_gutter_width;
 		int minimap_width;
 		Cache() {
-
 			row_height = 0;
 			line_spacing = 0;
 			line_number_w = 0;
@@ -268,10 +262,9 @@ private:
 	} cache;
 
 	Map<int, int> color_region_cache;
-	Map<int, Map<int, HighlighterInfo> > syntax_highlighting_cache;
+	Map<int, Map<int, HighlighterInfo>> syntax_highlighting_cache;
 
 	struct TextOperation {
-
 		enum Type {
 			TYPE_NONE,
 			TYPE_INSERT,
@@ -306,6 +299,7 @@ private:
 
 	List<TextOperation> undo_stack;
 	List<TextOperation>::Element *undo_stack_pos;
+	int undo_stack_max_size;
 
 	void _clear_redo();
 	void _do_text_op(const TextOperation &p_op, bool p_reverse);
@@ -369,8 +363,9 @@ private:
 	bool undo_enabled;
 	bool line_numbers;
 	bool line_numbers_zero_padded;
-	bool line_length_guideline;
-	int line_length_guideline_col;
+	bool line_length_guidelines;
+	int line_length_guideline_soft_col;
+	int line_length_guideline_hard_col;
 	bool draw_bookmark_gutter;
 	bool draw_breakpoint_gutter;
 	int breakpoint_gutter_width;
@@ -513,7 +508,7 @@ private:
 
 	int _get_column_pos_of_word(const String &p_key, const String &p_search, uint32_t p_search_flags, int p_from_column);
 
-	PoolVector<int> _search_bind(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column) const;
+	Dictionary _search_bind(const String &p_key, uint32_t p_search_flags, int p_from_line, int p_from_column) const;
 
 	PopupMenu *menu;
 
@@ -529,7 +524,7 @@ private:
 protected:
 	virtual String get_tooltip(const Point2 &p_pos) const;
 
-	void _insert_text(int p_line, int p_char, const String &p_text, int *r_end_line = NULL, int *r_end_char = NULL);
+	void _insert_text(int p_line, int p_char, const String &p_text, int *r_end_line = nullptr, int *r_end_char = nullptr);
 	void _remove_text(int p_from_line, int p_from_column, int p_to_line, int p_to_column);
 	void _insert_text_at_cursor(const String &p_text);
 	void _gui_input(const Ref<InputEvent> &p_gui_input);
@@ -566,11 +561,6 @@ public:
 		SEARCH_BACKWARDS = 4
 	};
 
-	enum SearchResult {
-		SEARCH_RESULT_COLUMN,
-		SEARCH_RESULT_LINE,
-	};
-
 	virtual CursorShape get_cursor_shape(const Point2 &p_pos = Point2i()) const;
 
 	void _get_mouse_pos(const Point2i &p_mouse, int &r_row, int &r_col) const;
@@ -584,6 +574,7 @@ public:
 
 	bool is_insert_text_operation();
 
+	void set_highlighted_word(const String &new_word);
 	void set_text(String p_text);
 	void insert_text_at_cursor(const String &p_text);
 	void insert_at(const String &p_text, int at);
@@ -765,8 +756,9 @@ public:
 
 	void set_line_numbers_zero_padded(bool p_zero_padded);
 
-	void set_show_line_length_guideline(bool p_show);
-	void set_line_length_guideline_column(int p_column);
+	void set_show_line_length_guidelines(bool p_show);
+	void set_line_length_guideline_soft_column(int p_column);
+	void set_line_length_guideline_hard_column(int p_column);
 
 	void set_bookmark_gutter_enabled(bool p_draw);
 	bool is_bookmark_gutter_enabled() const;
@@ -829,7 +821,6 @@ public:
 
 VARIANT_ENUM_CAST(TextEdit::MenuItems);
 VARIANT_ENUM_CAST(TextEdit::SearchFlags);
-VARIANT_ENUM_CAST(TextEdit::SearchResult);
 
 class SyntaxHighlighter {
 protected:

@@ -37,7 +37,6 @@
 #define PERF_WARN_PROCESS_SYNC
 
 class Performance : public Object {
-
 	GDCLASS(Performance, Object);
 
 	static Performance *singleton;
@@ -55,9 +54,7 @@ public:
 		TIME_PROCESS,
 		TIME_PHYSICS_PROCESS,
 		MEMORY_STATIC,
-		MEMORY_DYNAMIC,
 		MEMORY_STATIC_MAX,
-		MEMORY_DYNAMIC_MAX,
 		MEMORY_MESSAGE_BUFFER_MAX,
 		OBJECT_COUNT,
 		OBJECT_RESOURCE_COUNT,

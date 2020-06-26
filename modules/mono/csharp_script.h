@@ -53,8 +53,8 @@ class CSharpLanguage;
 template <typename TScriptInstance, typename TScriptLanguage>
 TScriptInstance *cast_script_instance(ScriptInstance *p_inst) {
 	if (!p_inst)
-		return NULL;
-	return p_inst->get_language() == TScriptLanguage::get_singleton() ? static_cast<TScriptInstance *>(p_inst) : NULL;
+		return nullptr;
+	return p_inst->get_language() == TScriptLanguage::get_singleton() ? static_cast<TScriptInstance *>(p_inst) : nullptr;
 }
 #else
 template <typename TScriptInstance, typename TScriptLanguage>
@@ -66,21 +66,34 @@ TScriptInstance *cast_script_instance(ScriptInstance *p_inst) {
 #define CAST_CSHARP_INSTANCE(m_inst) (cast_script_instance<CSharpInstance, CSharpLanguage>(m_inst))
 
 class CSharpScript : public Script {
-
 	GDCLASS(CSharpScript, Script);
 
+public:
+	struct SignalParameter {
+		String name;
+		Variant::Type type;
+		bool nil_is_variant = false;
+	};
+
+	struct EventSignal {
+		GDMonoField *field = nullptr;
+		GDMonoMethod *invoke_method = nullptr;
+		Vector<SignalParameter> parameters;
+	};
+
+private:
 	friend class CSharpInstance;
 	friend class CSharpLanguage;
 	friend struct CSharpScriptDepSort;
 
-	bool tool;
-	bool valid;
+	bool tool = false;
+	bool valid = false;
 
 	bool builtin;
 
-	GDMonoClass *base;
-	GDMonoClass *native;
-	GDMonoClass *script_class;
+	GDMonoClass *base = nullptr;
+	GDMonoClass *native = nullptr;
+	GDMonoClass *script_class = nullptr;
 
 	Ref<CSharpScript> base_cache; // TODO what's this for?
 
@@ -91,7 +104,8 @@ class CSharpScript : public Script {
 		// TODO
 		// Replace with buffer containing the serialized state of managed scripts.
 		// Keep variant state backup to use only with script instance placeholders.
-		List<Pair<StringName, Variant> > properties;
+		List<Pair<StringName, Variant>> properties;
+		List<Pair<StringName, Array>> event_signals;
 	};
 
 	Set<ObjectID> pending_reload_instances;
@@ -103,15 +117,11 @@ class CSharpScript : public Script {
 	String source;
 	StringName name;
 
-	SelfList<CSharpScript> script_list;
+	SelfList<CSharpScript> script_list = this;
 
-	struct Argument {
-		String name;
-		Variant::Type type;
-	};
-
-	Map<StringName, Vector<Argument> > _signals;
-	bool signals_invalidated;
+	Map<StringName, Vector<SignalParameter>> _signals;
+	Map<StringName, EventSignal> event_signals;
+	bool signals_invalidated = true;
 
 	Vector<ScriptNetData> rpc_functions;
 	Vector<ScriptNetData> rpc_variables;
@@ -120,12 +130,16 @@ class CSharpScript : public Script {
 	List<PropertyInfo> exported_members_cache; // members_cache
 	Map<StringName, Variant> exported_members_defval_cache; // member_default_values_cache
 	Set<PlaceHolderScriptInstance *> placeholders;
-	bool source_changed_cache;
-	bool placeholder_fallback_enabled;
-	bool exports_invalidated;
+	bool source_changed_cache = false;
+	bool placeholder_fallback_enabled = false;
+	bool exports_invalidated = true;
 	void _update_exports_values(Map<StringName, Variant> &values, List<PropertyInfo> &propnames);
 	void _update_member_info_no_exports();
 	virtual void _placeholder_erased(PlaceHolderScriptInstance *p_placeholder);
+#endif
+
+#if defined(TOOLS_ENABLED) || defined(DEBUG_ENABLED)
+	Set<StringName> exported_members_names;
 #endif
 
 	Map<StringName, PropertyInfo> member_info;
@@ -133,16 +147,17 @@ class CSharpScript : public Script {
 	void _clear();
 
 	void load_script_signals(GDMonoClass *p_class, GDMonoClass *p_native_class);
-	bool _get_signal(GDMonoClass *p_class, GDMonoClass *p_delegate, Vector<Argument> &params);
+	bool _get_signal(GDMonoClass *p_class, GDMonoMethod *p_delegate_invoke, Vector<SignalParameter> &params);
 
 	bool _update_exports();
-#ifdef TOOLS_ENABLED
+
 	bool _get_member_export(IMonoClassMember *p_member, bool p_inspect_export, PropertyInfo &r_prop_info, bool &r_exported);
+#ifdef TOOLS_ENABLED
 	static int _try_get_member_export_hint(IMonoClassMember *p_member, ManagedType p_type, Variant::Type p_variant_type, bool p_allow_generics, PropertyHint &r_hint, String &r_hint_string);
 #endif
 
-	CSharpInstance *_create_instance(const Variant **p_args, int p_argcount, Object *p_owner, bool p_isref, Variant::CallError &r_error);
-	Variant _new(const Variant **p_args, int p_argcount, Variant::CallError &r_error);
+	CSharpInstance *_create_instance(const Variant **p_args, int p_argcount, Object *p_owner, bool p_isref, Callable::CallError &r_error);
+	Variant _new(const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 
 	// Do not use unless you know what you are doing
 	friend void GDMonoInternals::tie_managed_to_unmanaged(MonoObject *, Object *);
@@ -154,7 +169,7 @@ class CSharpScript : public Script {
 protected:
 	static void _bind_methods();
 
-	Variant call(const StringName &p_method, const Variant **p_args, int p_argcount, Variant::CallError &r_error);
+	Variant call(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 	virtual void _resource_path_changed();
 	bool _get(const StringName &p_name, Variant &r_ret) const;
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -180,8 +195,12 @@ public:
 	virtual void get_script_property_list(List<PropertyInfo> *p_list) const;
 	virtual void update_exports();
 
+	void get_members(Set<StringName> *p_members) override;
+
 	virtual bool is_tool() const { return tool; }
 	virtual bool is_valid() const { return valid; }
+
+	bool inherits_script(const Ref<Script> &p_script) const;
 
 	virtual Ref<Script> get_base_script() const;
 	virtual ScriptLanguage *get_language() const;
@@ -217,19 +236,20 @@ public:
 };
 
 class CSharpInstance : public ScriptInstance {
-
 	friend class CSharpScript;
 	friend class CSharpLanguage;
 
-	Object *owner;
-	bool base_ref;
-	bool ref_dying;
-	bool unsafe_referenced;
-	bool predelete_notified;
-	bool destructing_script_instance;
+	Object *owner = nullptr;
+	bool base_ref = false;
+	bool ref_dying = false;
+	bool unsafe_referenced = false;
+	bool predelete_notified = false;
+	bool destructing_script_instance = false;
 
 	Ref<CSharpScript> script;
-	Ref<MonoGCHandle> gchandle;
+	MonoGCHandleData gchandle;
+
+	Vector<Callable> event_signal_callables;
 
 	bool _reference_owner_unsafe();
 
@@ -239,17 +259,18 @@ class CSharpInstance : public ScriptInstance {
 	bool _unreference_owner_unsafe();
 
 	/*
-	 * If NULL is returned, the caller must destroy the script instance by removing it from its owner.
+	 * If nullptr is returned, the caller must destroy the script instance by removing it from its owner.
 	 */
 	MonoObject *_internal_new_managed();
 
 	// Do not use unless you know what you are doing
 	friend void GDMonoInternals::tie_managed_to_unmanaged(MonoObject *, Object *);
-	static CSharpInstance *create_for_managed_type(Object *p_owner, CSharpScript *p_script, const Ref<MonoGCHandle> &p_gchandle);
+	static CSharpInstance *create_for_managed_type(Object *p_owner, CSharpScript *p_script, const MonoGCHandleData &p_gchandle);
 
 	void _call_multilevel(MonoObject *p_mono_object, const StringName &p_method, const Variant **p_args, int p_argcount);
 
-	void get_properties_state_for_reloading(List<Pair<StringName, Variant> > &r_state);
+	void get_properties_state_for_reloading(List<Pair<StringName, Variant>> &r_state);
+	void get_event_signals_state_for_reloading(List<Pair<StringName, Array>> &r_state);
 
 public:
 	MonoObject *get_mono_object() const;
@@ -265,17 +286,20 @@ public:
 
 	/* TODO */ virtual void get_method_list(List<MethodInfo> *p_list) const {}
 	virtual bool has_method(const StringName &p_method) const;
-	virtual Variant call(const StringName &p_method, const Variant **p_args, int p_argcount, Variant::CallError &r_error);
+	virtual Variant call(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error);
 	virtual void call_multilevel(const StringName &p_method, const Variant **p_args, int p_argcount);
 	virtual void call_multilevel_reversed(const StringName &p_method, const Variant **p_args, int p_argcount);
 
 	void mono_object_disposed(MonoObject *p_obj);
 
 	/*
-	 * If 'r_delete_owner' is set to true, the caller must memdelete the script instance's owner. Otherwise, if
+	 * If 'r_delete_owner' is set to true, the caller must memdelete the script instance's owner. Otherwise, ifevent_signal
 	 * 'r_remove_script_instance' is set to true, the caller must destroy the script instance by removing it from its owner.
 	 */
 	void mono_object_disposed_baseref(MonoObject *p_obj, bool p_is_finalizer, bool &r_delete_owner, bool &r_remove_script_instance);
+
+	void connect_event_signals();
+	void disconnect_event_signals();
 
 	virtual void refcount_incremented();
 	virtual bool refcount_decremented();
@@ -301,44 +325,51 @@ public:
 
 	virtual ScriptLanguage *get_language();
 
-	CSharpInstance();
+	CSharpInstance(const Ref<CSharpScript> &p_script);
 	~CSharpInstance();
 };
 
 struct CSharpScriptBinding {
-	bool inited;
+	bool inited = false;
 	StringName type_name;
-	GDMonoClass *wrapper_class;
-	Ref<MonoGCHandle> gchandle;
-	Object *owner;
+	GDMonoClass *wrapper_class = nullptr;
+	MonoGCHandleData gchandle;
+	Object *owner = nullptr;
+
+	CSharpScriptBinding() {}
+};
+
+class ManagedCallableMiddleman : public Object {
+	GDCLASS(ManagedCallableMiddleman, Object);
 };
 
 class CSharpLanguage : public ScriptLanguage {
-
 	friend class CSharpScript;
 	friend class CSharpInstance;
 
 	static CSharpLanguage *singleton;
 
-	bool finalizing;
+	bool finalizing = false;
+	bool finalized = false;
 
-	GDMono *gdmono;
+	GDMono *gdmono = nullptr;
 	SelfList<CSharpScript>::List script_list;
 
-	Mutex *script_instances_mutex;
-	Mutex *script_gchandle_release_mutex;
-	Mutex *language_bind_mutex;
+	Mutex script_instances_mutex;
+	Mutex script_gchandle_release_mutex;
+	Mutex language_bind_mutex;
 
 	Map<Object *, CSharpScriptBinding> script_bindings;
 
 #ifdef DEBUG_ENABLED
 	// List of unsafe object references
 	Map<ObjectID, int> unsafe_object_references;
-	Mutex *unsafe_object_references_lock;
+	Mutex unsafe_object_references_lock;
 #endif
 
-	struct StringNameCache {
+	ManagedCallableMiddleman *managed_callable_middleman = memnew(ManagedCallableMiddleman);
 
+	struct StringNameCache {
 		StringName _signal_callback;
 		StringName _set;
 		StringName _get;
@@ -348,17 +379,18 @@ class CSharpLanguage : public ScriptLanguage {
 		StringName dotctor; // .ctor
 		StringName on_before_serialize; // OnBeforeSerialize
 		StringName on_after_deserialize; // OnAfterDeserialize
+		StringName delegate_invoke_method_name;
 
 		StringNameCache();
 	};
 
-	int lang_idx;
+	int lang_idx = -1;
 
 	Dictionary scripts_metadata;
-	bool scripts_metadata_invalidated;
+	bool scripts_metadata_invalidated = true;
 
 	// For debug_break and debug_break_parse
-	int _debug_parse_err_line;
+	int _debug_parse_err_line = -1;
 	String _debug_parse_err_file;
 	String _debug_error;
 
@@ -368,7 +400,7 @@ class CSharpLanguage : public ScriptLanguage {
 	void _on_scripts_domain_unloaded();
 
 #ifdef TOOLS_ENABLED
-	EditorPlugin *godotsharp_editor;
+	EditorPlugin *godotsharp_editor = nullptr;
 
 	static void _editor_init_callback();
 #endif
@@ -376,7 +408,7 @@ class CSharpLanguage : public ScriptLanguage {
 public:
 	StringNameCache string_names;
 
-	Mutex *get_language_bind_mutex() { return language_bind_mutex; }
+	const Mutex &get_language_bind_mutex() { return language_bind_mutex; }
 
 	_FORCE_INLINE_ int get_language_index() { return lang_idx; }
 	void set_language_index(int p_idx);
@@ -389,8 +421,8 @@ public:
 	_FORCE_INLINE_ EditorPlugin *get_godotsharp_editor() const { return godotsharp_editor; }
 #endif
 
-	static void release_script_gchandle(Ref<MonoGCHandle> &p_gchandle);
-	static void release_script_gchandle(MonoObject *p_expected_obj, Ref<MonoGCHandle> &p_gchandle);
+	static void release_script_gchandle(MonoGCHandleData &p_gchandle);
+	static void release_script_gchandle(MonoObject *p_expected_obj, MonoGCHandleData &p_gchandle);
 
 	bool debug_break(const String &p_error, bool p_allow_continue = true);
 	bool debug_break_parse(const String &p_file, int p_line, const String &p_error);
@@ -410,6 +442,8 @@ public:
 		return scripts_metadata;
 	}
 
+	_FORCE_INLINE_ ManagedCallableMiddleman *get_managed_callable_middleman() const { return managed_callable_middleman; }
+
 	virtual String get_name() const;
 
 	/* LANGUAGE FUNCTIONS */
@@ -426,13 +460,13 @@ public:
 	virtual Ref<Script> get_template(const String &p_class_name, const String &p_base_class_name) const;
 	virtual bool is_using_templates();
 	virtual void make_template(const String &p_class_name, const String &p_base_class_name, Ref<Script> &p_script);
-	/* TODO */ virtual bool validate(const String &p_script, int &r_line_error, int &r_col_error, String &r_test_error, const String &p_path, List<String> *r_functions, List<ScriptLanguage::Warning> *r_warnings = NULL, Set<int> *r_safe_lines = NULL) const { return true; }
+	/* TODO */ virtual bool validate(const String &p_script, int &r_line_error, int &r_col_error, String &r_test_error, const String &p_path, List<String> *r_functions, List<ScriptLanguage::Warning> *r_warnings = nullptr, Set<int> *r_safe_lines = nullptr) const { return true; }
 	virtual String validate_path(const String &p_path) const;
 	virtual Script *create_script() const;
 	virtual bool has_named_classes() const;
 	virtual bool supports_builtin_mode() const;
 	/* TODO? */ virtual int find_function(const String &p_function, const String &p_code) const { return -1; }
-	virtual String make_function(const String &p_class, const String &p_name, const PoolStringArray &p_args) const;
+	virtual String make_function(const String &p_class, const String &p_name, const PackedStringArray &p_args) const;
 	virtual String _get_indentation() const;
 	/* TODO? */ virtual void auto_indent_code(String &p_code, int p_from_line, int p_to_line) const {}
 	/* TODO */ virtual void add_global_constant(const StringName &p_variable, const Variant &p_value) {}
@@ -458,7 +492,7 @@ public:
 	virtual void frame();
 
 	/* TODO? */ virtual void get_public_functions(List<MethodInfo> *p_functions) const {}
-	/* TODO? */ virtual void get_public_constants(List<Pair<String, Variant> > *p_constants) const {}
+	/* TODO? */ virtual void get_public_constants(List<Pair<String, Variant>> *p_constants) const {}
 
 	virtual void reload_all_scripts();
 	virtual void reload_tool_script(const Ref<Script> &p_script, bool p_soft_reload);
@@ -497,7 +531,7 @@ public:
 
 class ResourceFormatLoaderCSharpScript : public ResourceFormatLoader {
 public:
-	virtual RES load(const String &p_path, const String &p_original_path = "", Error *r_error = NULL);
+	virtual RES load(const String &p_path, const String &p_original_path = "", Error *r_error = nullptr, bool p_use_sub_threads = false, float *r_progress = nullptr, bool p_no_cache = false);
 	virtual void get_recognized_extensions(List<String> *p_extensions) const;
 	virtual bool handles_type(const String &p_type) const;
 	virtual String get_resource_type(const String &p_path) const;

@@ -37,13 +37,12 @@
 #include "core/variant_parser.h"
 
 class ConfigFile : public Reference {
-
 	GDCLASS(ConfigFile, Reference);
 
-	OrderedHashMap<String, OrderedHashMap<String, Variant> > values;
+	OrderedHashMap<String, OrderedHashMap<String, Variant>> values;
 
-	PoolStringArray _get_sections() const;
-	PoolStringArray _get_section_keys(const String &p_section) const;
+	PackedStringArray _get_sections() const;
+	PackedStringArray _get_section_keys(const String &p_section) const;
 	Error _internal_load(const String &p_path, FileAccess *f);
 	Error _internal_save(FileAccess *file);
 
@@ -74,8 +73,6 @@ public:
 
 	Error save_encrypted(const String &p_path, const Vector<uint8_t> &p_key);
 	Error save_encrypted_pass(const String &p_path, const String &p_pass);
-
-	ConfigFile();
 };
 
 #endif // CONFIG_FILE_H

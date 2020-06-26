@@ -38,7 +38,6 @@
 #define SL ShaderLanguage
 
 static String _mktab(int p_level) {
-
 	String tb;
 	for (int i = 0; i < p_level; i++) {
 		tb += "\t";
@@ -48,44 +47,45 @@ static String _mktab(int p_level) {
 }
 
 static String _typestr(SL::DataType p_type) {
-
 	return ShaderLanguage::get_datatype_name(p_type);
 }
 
 static String _prestr(SL::DataPrecision p_pres) {
-
 	switch (p_pres) {
-		case SL::PRECISION_LOWP: return "lowp ";
-		case SL::PRECISION_MEDIUMP: return "mediump ";
-		case SL::PRECISION_HIGHP: return "highp ";
-		case SL::PRECISION_DEFAULT: return "";
+		case SL::PRECISION_LOWP:
+			return "lowp ";
+		case SL::PRECISION_MEDIUMP:
+			return "mediump ";
+		case SL::PRECISION_HIGHP:
+			return "highp ";
+		case SL::PRECISION_DEFAULT:
+			return "";
 	}
 	return "";
 }
 
 static String _qualstr(SL::ArgumentQualifier p_qual) {
-
 	switch (p_qual) {
-		case SL::ARGUMENT_QUALIFIER_IN: return "in ";
-		case SL::ARGUMENT_QUALIFIER_OUT: return "out ";
-		case SL::ARGUMENT_QUALIFIER_INOUT: return "inout ";
+		case SL::ARGUMENT_QUALIFIER_IN:
+			return "in ";
+		case SL::ARGUMENT_QUALIFIER_OUT:
+			return "out ";
+		case SL::ARGUMENT_QUALIFIER_INOUT:
+			return "inout ";
 	}
 	return "";
 }
 
 static String _opstr(SL::Operator p_op) {
-
 	return SL::get_operator_text(p_op);
 }
 
 static String _mkid(const String &p_id) {
-
 	String id = "m_" + p_id.replace("__", "_dus_");
 	return id.replace("__", "_dus_"); //doubleunderscore is reserved in glsl
 }
 
 static String f2sp0(float p_float) {
-
 	String num = rtoss(p_float);
 	if (num.find(".") == -1 && num.find("e") == -1) {
 		num += ".0";
@@ -94,13 +94,12 @@ static String f2sp0(float p_float) {
 }
 
 static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNode::Value> &p_values) {
-
 	switch (p_type) {
-		case SL::TYPE_BOOL: return p_values[0].boolean ? "true" : "false";
+		case SL::TYPE_BOOL:
+			return p_values[0].boolean ? "true" : "false";
 		case SL::TYPE_BVEC2:
 		case SL::TYPE_BVEC3:
 		case SL::TYPE_BVEC4: {
-
 			StringBuffer<> text;
 
 			text += "bvec";
@@ -118,11 +117,11 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 		}
 
 		// GLSL ES 2 doesn't support uints, so we just use signed ints instead...
-		case SL::TYPE_UINT: return itos(p_values[0].uint);
+		case SL::TYPE_UINT:
+			return itos(p_values[0].uint);
 		case SL::TYPE_UVEC2:
 		case SL::TYPE_UVEC3:
 		case SL::TYPE_UVEC4: {
-
 			StringBuffer<> text;
 
 			text += "ivec";
@@ -140,11 +139,11 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 
 		} break;
 
-		case SL::TYPE_INT: return itos(p_values[0].sint);
+		case SL::TYPE_INT:
+			return itos(p_values[0].sint);
 		case SL::TYPE_IVEC2:
 		case SL::TYPE_IVEC3:
 		case SL::TYPE_IVEC4: {
-
 			StringBuffer<> text;
 
 			text += "ivec";
@@ -161,11 +160,11 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 			return text.as_string();
 
 		} break;
-		case SL::TYPE_FLOAT: return f2sp0(p_values[0].real);
+		case SL::TYPE_FLOAT:
+			return f2sp0(p_values[0].real);
 		case SL::TYPE_VEC2:
 		case SL::TYPE_VEC3:
 		case SL::TYPE_VEC4: {
-
 			StringBuffer<> text;
 
 			text += "vec";
@@ -185,7 +184,6 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 		case SL::TYPE_MAT2:
 		case SL::TYPE_MAT3:
 		case SL::TYPE_MAT4: {
-
 			StringBuffer<> text;
 
 			text += "mat";
@@ -202,7 +200,8 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 			return text.as_string();
 
 		} break;
-		default: ERR_FAIL_V(String());
+		default:
+			ERR_FAIL_V(String());
 	}
 }
 
@@ -219,14 +218,13 @@ void ShaderCompilerGLES2::_dump_function_deps(SL::ShaderNode *p_node, const Stri
 	ERR_FAIL_COND(fidx == -1);
 
 	for (Set<StringName>::Element *E = p_node->functions[fidx].uses_function.front(); E; E = E->next()) {
-
 		if (r_added.has(E->get())) {
 			continue;
 		}
 
 		_dump_function_deps(p_node, E->get(), p_func_code, r_to_add, r_added);
 
-		SL::FunctionNode *fnode = NULL;
+		SL::FunctionNode *fnode = nullptr;
 
 		for (int i = 0; i < p_node->functions.size(); i++) {
 			if (p_node->functions[i].name == E->get()) {
@@ -264,20 +262,15 @@ void ShaderCompilerGLES2::_dump_function_deps(SL::ShaderNode *p_node, const Stri
 	}
 }
 
-String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, GeneratedCode &r_gen_code, IdentifierActions &p_actions, const DefaultIdentifierActions &p_default_actions, bool p_assigning) {
-
+String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, GeneratedCode &r_gen_code, IdentifierActions &p_actions, const DefaultIdentifierActions &p_default_actions, bool p_assigning, bool p_use_scope) {
 	StringBuilder code;
 
 	switch (p_node->type) {
-
 		case SL::Node::TYPE_SHADER: {
-
 			SL::ShaderNode *snode = (SL::ShaderNode *)p_node;
 
 			for (int i = 0; i < snode->render_modes.size(); i++) {
-
 				if (p_default_actions.render_mode_defines.has(snode->render_modes[i]) && !used_rmode_defines.has(snode->render_modes[i])) {
-
 					r_gen_code.custom_defines.push_back(p_default_actions.render_mode_defines[snode->render_modes[i]].utf8());
 					used_rmode_defines.insert(snode->render_modes[i]);
 				}
@@ -314,7 +307,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			// structs
 
 			for (int i = 0; i < snode->vstructs.size(); i++) {
-
 				SL::StructNode *st = snode->vstructs[i].shader_struct;
 				String struct_code;
 
@@ -381,7 +373,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			// varyings
 
 			for (Map<StringName, SL::ShaderNode::Varying>::Element *E = snode->varyings.front(); E; E = E->next()) {
-
 				StringBuffer<> varying_code;
 
 				varying_code += "varying ";
@@ -404,18 +395,19 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 
 			// constants
 
-			for (Map<StringName, SL::ShaderNode::Constant>::Element *E = snode->constants.front(); E; E = E->next()) {
+			for (int i = 0; i < snode->vconstants.size(); i++) {
+				const SL::ShaderNode::Constant &cnode = snode->vconstants[i];
 				String gcode;
 				gcode += "const ";
-				gcode += _prestr(E->get().precision);
-				if (E->get().type == SL::TYPE_STRUCT) {
-					gcode += _mkid(E->get().type_str);
+				gcode += _prestr(cnode.precision);
+				if (cnode.type == SL::TYPE_STRUCT) {
+					gcode += _mkid(cnode.type_str);
 				} else {
-					gcode += _typestr(E->get().type);
+					gcode += _typestr(cnode.type);
 				}
-				gcode += " " + _mkid(E->key());
+				gcode += " " + _mkid(String(cnode.name));
 				gcode += "=";
-				gcode += _dump_node_code(E->get().initializer, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+				gcode += _dump_node_code(cnode.initializer, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 				gcode += ";\n";
 				vertex_global += gcode;
 				fragment_global += gcode;
@@ -435,7 +427,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			Set<StringName> added_fragment;
 
 			for (int i = 0; i < snode->functions.size(); i++) {
-
 				SL::FunctionNode *fnode = snode->functions[i].function;
 
 				current_func_name = fnode->name;
@@ -459,14 +450,11 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 
 		} break;
 		case SL::Node::TYPE_STRUCT: {
-
 		} break;
 		case SL::Node::TYPE_FUNCTION: {
-
 		} break;
 
 		case SL::Node::TYPE_BLOCK: {
-
 			SL::BlockNode *bnode = (SL::BlockNode *)p_node;
 
 			if (!bnode->single_statement) {
@@ -507,7 +495,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			}
 
 			for (int i = 0; i < var_dec_node->declarations.size(); i++) {
-
 				if (i > 0) {
 					declaration += ",";
 				}
@@ -584,7 +571,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			code += ")";
 		} break;
 		case SL::Node::TYPE_ARRAY_DECLARATION: {
-
 			SL::ArrayDeclarationNode *arr_dec_node = (SL::ArrayDeclarationNode *)p_node;
 
 			StringBuffer<> declaration;
@@ -595,7 +581,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 				declaration += _typestr(arr_dec_node->datatype);
 			}
 			for (int i = 0; i < arr_dec_node->declarations.size(); i++) {
-
 				if (i > 0) {
 					declaration += ",";
 				}
@@ -639,12 +624,12 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 				code += _mkid(arr_node->name);
 			}
 
-			if (arr_node->call_expression != NULL) {
+			if (arr_node->call_expression != nullptr) {
 				code += ".";
-				code += _dump_node_code(arr_node->call_expression, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+				code += _dump_node_code(arr_node->call_expression, p_level, r_gen_code, p_actions, p_default_actions, p_assigning, false);
 			}
 
-			if (arr_node->index_expression != NULL) {
+			if (arr_node->index_expression != nullptr) {
 				code += "[";
 				code += _dump_node_code(arr_node->index_expression, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 				code += "]";
@@ -723,7 +708,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 					} else if (op_node->op == SL::OP_CONSTRUCT) {
 						code += var_node->name;
 					} else {
-
 						if (var_node->name == "texture") {
 							// emit texture call
 
@@ -751,9 +735,7 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 							}
 
 						} else if (var_node->name == "mix") {
-
 							switch (op_node->arguments[3]->get_datatype()) {
-
 								case SL::TYPE_BVEC2: {
 									code += "select2";
 								} break;
@@ -770,7 +752,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 								case SL::TYPE_VEC3:
 								case SL::TYPE_VEC4:
 								case SL::TYPE_FLOAT: {
-
 									code += "mix";
 								} break;
 
@@ -833,7 +814,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 				} break;
 
 				case SL::OP_MOD: {
-
 					code += "mod(float(";
 					code += _dump_node_code(op_node->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 					code += "), float(";
@@ -842,13 +822,17 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 				} break;
 
 				default: {
-					code += "(";
+					if (p_use_scope) {
+						code += "(";
+					}
 					code += _dump_node_code(op_node->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 					code += " ";
 					code += _opstr(op_node->op);
 					code += " ";
 					code += _dump_node_code(op_node->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
-					code += ")";
+					if (p_use_scope) {
+						code += ")";
+					}
 				} break;
 			}
 		} break;
@@ -857,7 +841,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			SL::ControlFlowNode *cf_node = (SL::ControlFlowNode *)p_node;
 
 			if (cf_node->flow_op == SL::FLOW_OP_IF) {
-
 				code += _mktab(p_level);
 				code += "if (";
 				code += _dump_node_code(cf_node->expressions[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
@@ -884,7 +867,6 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 				code += ")\n";
 				code += _dump_node_code(cf_node->blocks[0], p_level + 1, r_gen_code, p_actions, p_default_actions, p_assigning);
 			} else if (cf_node->flow_op == SL::FLOW_OP_FOR) {
-
 				code += _mktab(p_level);
 				code += "for (";
 				code += _dump_node_code(cf_node->blocks[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
@@ -923,7 +905,7 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 			code += _dump_node_code(member_node->owner, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 			code += ".";
 			code += member_node->name;
-			if (member_node->index_expression != NULL) {
+			if (member_node->index_expression != nullptr) {
 				code += "[";
 				code += _dump_node_code(member_node->index_expression, p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
 				code += "]";
@@ -934,18 +916,16 @@ String ShaderCompilerGLES2::_dump_node_code(SL::Node *p_node, int p_level, Gener
 	return code.as_string();
 }
 
-Error ShaderCompilerGLES2::compile(VS::ShaderMode p_mode, const String &p_code, IdentifierActions *p_actions, const String &p_path, GeneratedCode &r_gen_code) {
-
+Error ShaderCompilerGLES2::compile(RS::ShaderMode p_mode, const String &p_code, IdentifierActions *p_actions, const String &p_path, GeneratedCode &r_gen_code) {
 	Error err = parser.compile(p_code, ShaderTypes::get_singleton()->get_functions(p_mode), ShaderTypes::get_singleton()->get_modes(p_mode), ShaderTypes::get_singleton()->get_types());
 
 	if (err != OK) {
-
 		Vector<String> shader = p_code.split("\n");
 		for (int i = 0; i < shader.size(); i++) {
 			print_line(itos(i + 1) + " " + shader[i]);
 		}
 
-		_err_print_error(NULL, p_path.utf8().get_data(), parser.get_error_line(), parser.get_error_text().utf8().get_data(), ERR_HANDLER_SHADER);
+		_err_print_error(nullptr, p_path.utf8().get_data(), parser.get_error_line(), parser.get_error_text().utf8().get_data(), ERR_HANDLER_SHADER);
 		return err;
 	}
 
@@ -972,213 +952,212 @@ Error ShaderCompilerGLES2::compile(VS::ShaderMode p_mode, const String &p_code, 
 }
 
 ShaderCompilerGLES2::ShaderCompilerGLES2() {
-
 	/** CANVAS ITEM SHADER **/
 
-	actions[VS::SHADER_CANVAS_ITEM].renames["VERTEX"] = "outvec.xy";
-	actions[VS::SHADER_CANVAS_ITEM].renames["UV"] = "uv";
-	actions[VS::SHADER_CANVAS_ITEM].renames["POINT_SIZE"] = "point_size";
+	actions[RS::SHADER_CANVAS_ITEM].renames["VERTEX"] = "outvec.xy";
+	actions[RS::SHADER_CANVAS_ITEM].renames["UV"] = "uv";
+	actions[RS::SHADER_CANVAS_ITEM].renames["POINT_SIZE"] = "point_size";
 
-	actions[VS::SHADER_CANVAS_ITEM].renames["WORLD_MATRIX"] = "modelview_matrix";
-	actions[VS::SHADER_CANVAS_ITEM].renames["PROJECTION_MATRIX"] = "projection_matrix";
-	actions[VS::SHADER_CANVAS_ITEM].renames["EXTRA_MATRIX"] = "extra_matrix_instance";
-	actions[VS::SHADER_CANVAS_ITEM].renames["TIME"] = "time";
-	actions[VS::SHADER_CANVAS_ITEM].renames["AT_LIGHT_PASS"] = "at_light_pass";
-	actions[VS::SHADER_CANVAS_ITEM].renames["INSTANCE_CUSTOM"] = "instance_custom";
+	actions[RS::SHADER_CANVAS_ITEM].renames["WORLD_MATRIX"] = "modelview_matrix";
+	actions[RS::SHADER_CANVAS_ITEM].renames["PROJECTION_MATRIX"] = "projection_matrix";
+	actions[RS::SHADER_CANVAS_ITEM].renames["EXTRA_MATRIX"] = "extra_matrix_instance";
+	actions[RS::SHADER_CANVAS_ITEM].renames["TIME"] = "time";
+	actions[RS::SHADER_CANVAS_ITEM].renames["AT_LIGHT_PASS"] = "at_light_pass";
+	actions[RS::SHADER_CANVAS_ITEM].renames["INSTANCE_CUSTOM"] = "instance_custom";
 
-	actions[VS::SHADER_CANVAS_ITEM].renames["COLOR"] = "color";
-	actions[VS::SHADER_CANVAS_ITEM].renames["NORMAL"] = "normal";
-	actions[VS::SHADER_CANVAS_ITEM].renames["NORMALMAP"] = "normal_map";
-	actions[VS::SHADER_CANVAS_ITEM].renames["NORMALMAP_DEPTH"] = "normal_depth";
-	actions[VS::SHADER_CANVAS_ITEM].renames["TEXTURE"] = "color_texture";
-	actions[VS::SHADER_CANVAS_ITEM].renames["TEXTURE_PIXEL_SIZE"] = "color_texpixel_size";
-	actions[VS::SHADER_CANVAS_ITEM].renames["NORMAL_TEXTURE"] = "normal_texture";
-	actions[VS::SHADER_CANVAS_ITEM].renames["SCREEN_UV"] = "screen_uv";
-	actions[VS::SHADER_CANVAS_ITEM].renames["SCREEN_TEXTURE"] = "screen_texture";
-	actions[VS::SHADER_CANVAS_ITEM].renames["SCREEN_PIXEL_SIZE"] = "screen_pixel_size";
-	actions[VS::SHADER_CANVAS_ITEM].renames["FRAGCOORD"] = "gl_FragCoord";
-	actions[VS::SHADER_CANVAS_ITEM].renames["POINT_COORD"] = "gl_PointCoord";
+	actions[RS::SHADER_CANVAS_ITEM].renames["COLOR"] = "color";
+	actions[RS::SHADER_CANVAS_ITEM].renames["NORMAL"] = "normal";
+	actions[RS::SHADER_CANVAS_ITEM].renames["NORMALMAP"] = "normal_map";
+	actions[RS::SHADER_CANVAS_ITEM].renames["NORMALMAP_DEPTH"] = "normal_depth";
+	actions[RS::SHADER_CANVAS_ITEM].renames["TEXTURE"] = "color_texture";
+	actions[RS::SHADER_CANVAS_ITEM].renames["TEXTURE_PIXEL_SIZE"] = "color_texpixel_size";
+	actions[RS::SHADER_CANVAS_ITEM].renames["NORMAL_TEXTURE"] = "normal_texture";
+	actions[RS::SHADER_CANVAS_ITEM].renames["SCREEN_UV"] = "screen_uv";
+	actions[RS::SHADER_CANVAS_ITEM].renames["SCREEN_TEXTURE"] = "screen_texture";
+	actions[RS::SHADER_CANVAS_ITEM].renames["SCREEN_PIXEL_SIZE"] = "screen_pixel_size";
+	actions[RS::SHADER_CANVAS_ITEM].renames["FRAGCOORD"] = "gl_FragCoord";
+	actions[RS::SHADER_CANVAS_ITEM].renames["POINT_COORD"] = "gl_PointCoord";
 
-	actions[VS::SHADER_CANVAS_ITEM].renames["LIGHT_VEC"] = "light_vec";
-	actions[VS::SHADER_CANVAS_ITEM].renames["LIGHT_HEIGHT"] = "light_height";
-	actions[VS::SHADER_CANVAS_ITEM].renames["LIGHT_COLOR"] = "light_color";
-	actions[VS::SHADER_CANVAS_ITEM].renames["LIGHT_UV"] = "light_uv";
-	actions[VS::SHADER_CANVAS_ITEM].renames["LIGHT"] = "light";
-	actions[VS::SHADER_CANVAS_ITEM].renames["SHADOW_COLOR"] = "shadow_color";
-	actions[VS::SHADER_CANVAS_ITEM].renames["SHADOW_VEC"] = "shadow_vec";
+	actions[RS::SHADER_CANVAS_ITEM].renames["LIGHT_VEC"] = "light_vec";
+	actions[RS::SHADER_CANVAS_ITEM].renames["LIGHT_HEIGHT"] = "light_height";
+	actions[RS::SHADER_CANVAS_ITEM].renames["LIGHT_COLOR"] = "light_color";
+	actions[RS::SHADER_CANVAS_ITEM].renames["LIGHT_UV"] = "light_uv";
+	actions[RS::SHADER_CANVAS_ITEM].renames["LIGHT"] = "light";
+	actions[RS::SHADER_CANVAS_ITEM].renames["SHADOW_COLOR"] = "shadow_color";
+	actions[RS::SHADER_CANVAS_ITEM].renames["SHADOW_VEC"] = "shadow_vec";
 
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["COLOR"] = "#define COLOR_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_TEXTURE"] = "#define SCREEN_TEXTURE_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_UV"] = "#define SCREEN_UV_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_PIXEL_SIZE"] = "@SCREEN_UV";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["NORMAL"] = "#define NORMAL_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["NORMALMAP"] = "#define NORMALMAP_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
-	actions[VS::SHADER_CANVAS_ITEM].render_mode_defines["skip_vertex_transform"] = "#define SKIP_TRANSFORM_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["SHADOW_VEC"] = "#define SHADOW_VEC_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["COLOR"] = "#define COLOR_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_TEXTURE"] = "#define SCREEN_TEXTURE_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_UV"] = "#define SCREEN_UV_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["SCREEN_PIXEL_SIZE"] = "@SCREEN_UV";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["NORMAL"] = "#define NORMAL_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["NORMALMAP"] = "#define NORMALMAP_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
+	actions[RS::SHADER_CANVAS_ITEM].render_mode_defines["skip_vertex_transform"] = "#define SKIP_TRANSFORM_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["SHADOW_VEC"] = "#define SHADOW_VEC_USED\n";
 
 	// Ported from GLES3
 
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["sinh"] = "#define SINH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["cosh"] = "#define COSH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["tanh"] = "#define TANH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["asinh"] = "#define ASINH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["acosh"] = "#define ACOSH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["atanh"] = "#define ATANH_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["determinant"] = "#define DETERMINANT_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["transpose"] = "#define TRANSPOSE_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["outerProduct"] = "#define OUTER_PRODUCT_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["round"] = "#define ROUND_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["roundEven"] = "#define ROUND_EVEN_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["inverse"] = "#define INVERSE_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["isinf"] = "#define IS_INF_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["isnan"] = "#define IS_NAN_USED\n";
-	actions[VS::SHADER_CANVAS_ITEM].usage_defines["trunc"] = "#define TRUNC_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["sinh"] = "#define SINH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["cosh"] = "#define COSH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["tanh"] = "#define TANH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["asinh"] = "#define ASINH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["acosh"] = "#define ACOSH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["atanh"] = "#define ATANH_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["determinant"] = "#define DETERMINANT_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["transpose"] = "#define TRANSPOSE_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["outerProduct"] = "#define OUTER_PRODUCT_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["round"] = "#define ROUND_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["roundEven"] = "#define ROUND_EVEN_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["inverse"] = "#define INVERSE_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["isinf"] = "#define IS_INF_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["isnan"] = "#define IS_NAN_USED\n";
+	actions[RS::SHADER_CANVAS_ITEM].usage_defines["trunc"] = "#define TRUNC_USED\n";
 
 	/** SPATIAL SHADER **/
 
-	actions[VS::SHADER_SPATIAL].renames["WORLD_MATRIX"] = "world_transform";
-	actions[VS::SHADER_SPATIAL].renames["INV_CAMERA_MATRIX"] = "camera_inverse_matrix";
-	actions[VS::SHADER_SPATIAL].renames["CAMERA_MATRIX"] = "camera_matrix";
-	actions[VS::SHADER_SPATIAL].renames["PROJECTION_MATRIX"] = "projection_matrix";
-	actions[VS::SHADER_SPATIAL].renames["INV_PROJECTION_MATRIX"] = "projection_inverse_matrix";
-	actions[VS::SHADER_SPATIAL].renames["MODELVIEW_MATRIX"] = "modelview";
+	actions[RS::SHADER_SPATIAL].renames["WORLD_MATRIX"] = "world_transform";
+	actions[RS::SHADER_SPATIAL].renames["INV_CAMERA_MATRIX"] = "camera_inverse_matrix";
+	actions[RS::SHADER_SPATIAL].renames["CAMERA_MATRIX"] = "camera_matrix";
+	actions[RS::SHADER_SPATIAL].renames["PROJECTION_MATRIX"] = "projection_matrix";
+	actions[RS::SHADER_SPATIAL].renames["INV_PROJECTION_MATRIX"] = "projection_inverse_matrix";
+	actions[RS::SHADER_SPATIAL].renames["MODELVIEW_MATRIX"] = "modelview";
 
-	actions[VS::SHADER_SPATIAL].renames["VERTEX"] = "vertex.xyz";
-	actions[VS::SHADER_SPATIAL].renames["NORMAL"] = "normal";
-	actions[VS::SHADER_SPATIAL].renames["TANGENT"] = "tangent";
-	actions[VS::SHADER_SPATIAL].renames["BINORMAL"] = "binormal";
-	actions[VS::SHADER_SPATIAL].renames["POSITION"] = "position";
-	actions[VS::SHADER_SPATIAL].renames["UV"] = "uv_interp";
-	actions[VS::SHADER_SPATIAL].renames["UV2"] = "uv2_interp";
-	actions[VS::SHADER_SPATIAL].renames["COLOR"] = "color_interp";
-	actions[VS::SHADER_SPATIAL].renames["POINT_SIZE"] = "point_size";
+	actions[RS::SHADER_SPATIAL].renames["VERTEX"] = "vertex.xyz";
+	actions[RS::SHADER_SPATIAL].renames["NORMAL"] = "normal";
+	actions[RS::SHADER_SPATIAL].renames["TANGENT"] = "tangent";
+	actions[RS::SHADER_SPATIAL].renames["BINORMAL"] = "binormal";
+	actions[RS::SHADER_SPATIAL].renames["POSITION"] = "position";
+	actions[RS::SHADER_SPATIAL].renames["UV"] = "uv_interp";
+	actions[RS::SHADER_SPATIAL].renames["UV2"] = "uv2_interp";
+	actions[RS::SHADER_SPATIAL].renames["COLOR"] = "color_interp";
+	actions[RS::SHADER_SPATIAL].renames["POINT_SIZE"] = "point_size";
 	// gl_InstanceID is not available in OpenGL ES 2.0
-	actions[VS::SHADER_SPATIAL].renames["INSTANCE_ID"] = "0";
+	actions[RS::SHADER_SPATIAL].renames["INSTANCE_ID"] = "0";
 
 	//builtins
 
-	actions[VS::SHADER_SPATIAL].renames["TIME"] = "time";
-	actions[VS::SHADER_SPATIAL].renames["VIEWPORT_SIZE"] = "viewport_size";
+	actions[RS::SHADER_SPATIAL].renames["TIME"] = "time";
+	actions[RS::SHADER_SPATIAL].renames["VIEWPORT_SIZE"] = "viewport_size";
 
-	actions[VS::SHADER_SPATIAL].renames["FRAGCOORD"] = "gl_FragCoord";
-	actions[VS::SHADER_SPATIAL].renames["FRONT_FACING"] = "gl_FrontFacing";
-	actions[VS::SHADER_SPATIAL].renames["NORMALMAP"] = "normalmap";
-	actions[VS::SHADER_SPATIAL].renames["NORMALMAP_DEPTH"] = "normaldepth";
-	actions[VS::SHADER_SPATIAL].renames["ALBEDO"] = "albedo";
-	actions[VS::SHADER_SPATIAL].renames["ALPHA"] = "alpha";
-	actions[VS::SHADER_SPATIAL].renames["METALLIC"] = "metallic";
-	actions[VS::SHADER_SPATIAL].renames["SPECULAR"] = "specular";
-	actions[VS::SHADER_SPATIAL].renames["ROUGHNESS"] = "roughness";
-	actions[VS::SHADER_SPATIAL].renames["RIM"] = "rim";
-	actions[VS::SHADER_SPATIAL].renames["RIM_TINT"] = "rim_tint";
-	actions[VS::SHADER_SPATIAL].renames["CLEARCOAT"] = "clearcoat";
-	actions[VS::SHADER_SPATIAL].renames["CLEARCOAT_GLOSS"] = "clearcoat_gloss";
-	actions[VS::SHADER_SPATIAL].renames["ANISOTROPY"] = "anisotropy";
-	actions[VS::SHADER_SPATIAL].renames["ANISOTROPY_FLOW"] = "anisotropy_flow";
-	actions[VS::SHADER_SPATIAL].renames["SSS_STRENGTH"] = "sss_strength";
-	actions[VS::SHADER_SPATIAL].renames["TRANSMISSION"] = "transmission";
-	actions[VS::SHADER_SPATIAL].renames["AO"] = "ao";
-	actions[VS::SHADER_SPATIAL].renames["AO_LIGHT_AFFECT"] = "ao_light_affect";
-	actions[VS::SHADER_SPATIAL].renames["EMISSION"] = "emission";
-	actions[VS::SHADER_SPATIAL].renames["POINT_COORD"] = "gl_PointCoord";
-	actions[VS::SHADER_SPATIAL].renames["INSTANCE_CUSTOM"] = "instance_custom";
-	actions[VS::SHADER_SPATIAL].renames["SCREEN_UV"] = "screen_uv";
-	actions[VS::SHADER_SPATIAL].renames["SCREEN_TEXTURE"] = "screen_texture";
-	actions[VS::SHADER_SPATIAL].renames["DEPTH_TEXTURE"] = "depth_texture";
+	actions[RS::SHADER_SPATIAL].renames["FRAGCOORD"] = "gl_FragCoord";
+	actions[RS::SHADER_SPATIAL].renames["FRONT_FACING"] = "gl_FrontFacing";
+	actions[RS::SHADER_SPATIAL].renames["NORMALMAP"] = "normalmap";
+	actions[RS::SHADER_SPATIAL].renames["NORMALMAP_DEPTH"] = "normaldepth";
+	actions[RS::SHADER_SPATIAL].renames["ALBEDO"] = "albedo";
+	actions[RS::SHADER_SPATIAL].renames["ALPHA"] = "alpha";
+	actions[RS::SHADER_SPATIAL].renames["METALLIC"] = "metallic";
+	actions[RS::SHADER_SPATIAL].renames["SPECULAR"] = "specular";
+	actions[RS::SHADER_SPATIAL].renames["ROUGHNESS"] = "roughness";
+	actions[RS::SHADER_SPATIAL].renames["RIM"] = "rim";
+	actions[RS::SHADER_SPATIAL].renames["RIM_TINT"] = "rim_tint";
+	actions[RS::SHADER_SPATIAL].renames["CLEARCOAT"] = "clearcoat";
+	actions[RS::SHADER_SPATIAL].renames["CLEARCOAT_GLOSS"] = "clearcoat_gloss";
+	actions[RS::SHADER_SPATIAL].renames["ANISOTROPY"] = "anisotropy";
+	actions[RS::SHADER_SPATIAL].renames["ANISOTROPY_FLOW"] = "anisotropy_flow";
+	actions[RS::SHADER_SPATIAL].renames["SSS_STRENGTH"] = "sss_strength";
+	actions[RS::SHADER_SPATIAL].renames["TRANSMISSION"] = "transmission";
+	actions[RS::SHADER_SPATIAL].renames["AO"] = "ao";
+	actions[RS::SHADER_SPATIAL].renames["AO_LIGHT_AFFECT"] = "ao_light_affect";
+	actions[RS::SHADER_SPATIAL].renames["EMISSION"] = "emission";
+	actions[RS::SHADER_SPATIAL].renames["POINT_COORD"] = "gl_PointCoord";
+	actions[RS::SHADER_SPATIAL].renames["INSTANCE_CUSTOM"] = "instance_custom";
+	actions[RS::SHADER_SPATIAL].renames["SCREEN_UV"] = "screen_uv";
+	actions[RS::SHADER_SPATIAL].renames["SCREEN_TEXTURE"] = "screen_texture";
+	actions[RS::SHADER_SPATIAL].renames["DEPTH_TEXTURE"] = "depth_texture";
 	// Defined in GLES3, but not available in GLES2
-	//actions[VS::SHADER_SPATIAL].renames["DEPTH"] = "gl_FragDepth";
-	actions[VS::SHADER_SPATIAL].renames["ALPHA_SCISSOR"] = "alpha_scissor";
-	actions[VS::SHADER_SPATIAL].renames["OUTPUT_IS_SRGB"] = "SHADER_IS_SRGB";
+	//actions[RS::SHADER_SPATIAL].renames["DEPTH"] = "gl_FragDepth";
+	actions[RS::SHADER_SPATIAL].renames["ALPHA_SCISSOR"] = "alpha_scissor";
+	actions[RS::SHADER_SPATIAL].renames["OUTPUT_IS_SRGB"] = "SHADER_IS_SRGB";
 
 	//for light
-	actions[VS::SHADER_SPATIAL].renames["VIEW"] = "view";
-	actions[VS::SHADER_SPATIAL].renames["LIGHT_COLOR"] = "light_color";
-	actions[VS::SHADER_SPATIAL].renames["LIGHT"] = "light";
-	actions[VS::SHADER_SPATIAL].renames["ATTENUATION"] = "attenuation";
-	actions[VS::SHADER_SPATIAL].renames["DIFFUSE_LIGHT"] = "diffuse_light";
-	actions[VS::SHADER_SPATIAL].renames["SPECULAR_LIGHT"] = "specular_light";
+	actions[RS::SHADER_SPATIAL].renames["VIEW"] = "view";
+	actions[RS::SHADER_SPATIAL].renames["LIGHT_COLOR"] = "light_color";
+	actions[RS::SHADER_SPATIAL].renames["LIGHT"] = "light";
+	actions[RS::SHADER_SPATIAL].renames["ATTENUATION"] = "attenuation";
+	actions[RS::SHADER_SPATIAL].renames["DIFFUSE_LIGHT"] = "diffuse_light";
+	actions[RS::SHADER_SPATIAL].renames["SPECULAR_LIGHT"] = "specular_light";
 
-	actions[VS::SHADER_SPATIAL].usage_defines["TANGENT"] = "#define ENABLE_TANGENT_INTERP\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["BINORMAL"] = "@TANGENT";
-	actions[VS::SHADER_SPATIAL].usage_defines["RIM"] = "#define LIGHT_USE_RIM\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["RIM_TINT"] = "@RIM";
-	actions[VS::SHADER_SPATIAL].usage_defines["CLEARCOAT"] = "#define LIGHT_USE_CLEARCOAT\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["CLEARCOAT_GLOSS"] = "@CLEARCOAT";
-	actions[VS::SHADER_SPATIAL].usage_defines["ANISOTROPY"] = "#define LIGHT_USE_ANISOTROPY\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["ANISOTROPY_FLOW"] = "@ANISOTROPY";
-	actions[VS::SHADER_SPATIAL].usage_defines["AO"] = "#define ENABLE_AO\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["AO_LIGHT_AFFECT"] = "#define ENABLE_AO\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["UV"] = "#define ENABLE_UV_INTERP\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["UV2"] = "#define ENABLE_UV2_INTERP\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["NORMALMAP"] = "#define ENABLE_NORMALMAP\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["NORMALMAP_DEPTH"] = "@NORMALMAP";
-	actions[VS::SHADER_SPATIAL].usage_defines["COLOR"] = "#define ENABLE_COLOR_INTERP\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["INSTANCE_CUSTOM"] = "#define ENABLE_INSTANCE_CUSTOM\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["ALPHA_SCISSOR"] = "#define ALPHA_SCISSOR_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["POSITION"] = "#define OVERRIDE_POSITION\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["TANGENT"] = "#define ENABLE_TANGENT_INTERP\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["BINORMAL"] = "@TANGENT";
+	actions[RS::SHADER_SPATIAL].usage_defines["RIM"] = "#define LIGHT_USE_RIM\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["RIM_TINT"] = "@RIM";
+	actions[RS::SHADER_SPATIAL].usage_defines["CLEARCOAT"] = "#define LIGHT_USE_CLEARCOAT\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["CLEARCOAT_GLOSS"] = "@CLEARCOAT";
+	actions[RS::SHADER_SPATIAL].usage_defines["ANISOTROPY"] = "#define LIGHT_USE_ANISOTROPY\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["ANISOTROPY_FLOW"] = "@ANISOTROPY";
+	actions[RS::SHADER_SPATIAL].usage_defines["AO"] = "#define ENABLE_AO\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["AO_LIGHT_AFFECT"] = "#define ENABLE_AO\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["UV"] = "#define ENABLE_UV_INTERP\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["UV2"] = "#define ENABLE_UV2_INTERP\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["NORMALMAP"] = "#define ENABLE_NORMALMAP\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["NORMALMAP_DEPTH"] = "@NORMALMAP";
+	actions[RS::SHADER_SPATIAL].usage_defines["COLOR"] = "#define ENABLE_COLOR_INTERP\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["INSTANCE_CUSTOM"] = "#define ENABLE_INSTANCE_CUSTOM\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["ALPHA_SCISSOR"] = "#define ALPHA_SCISSOR_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["POSITION"] = "#define OVERRIDE_POSITION\n";
 
-	actions[VS::SHADER_SPATIAL].usage_defines["SSS_STRENGTH"] = "#define ENABLE_SSS\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["TRANSMISSION"] = "#define TRANSMISSION_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["SCREEN_TEXTURE"] = "#define SCREEN_TEXTURE_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["DEPTH_TEXTURE"] = "#define DEPTH_TEXTURE_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["SCREEN_UV"] = "#define SCREEN_UV_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["SSS_STRENGTH"] = "#define ENABLE_SSS\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["TRANSMISSION"] = "#define TRANSMISSION_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["SCREEN_TEXTURE"] = "#define SCREEN_TEXTURE_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["DEPTH_TEXTURE"] = "#define DEPTH_TEXTURE_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["SCREEN_UV"] = "#define SCREEN_UV_USED\n";
 
-	actions[VS::SHADER_SPATIAL].usage_defines["DIFFUSE_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["SPECULAR_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["DIFFUSE_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["SPECULAR_LIGHT"] = "#define USE_LIGHT_SHADER_CODE\n";
 
 	// Ported from GLES3
 
-	actions[VS::SHADER_SPATIAL].usage_defines["sinh"] = "#define SINH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["cosh"] = "#define COSH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["tanh"] = "#define TANH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["asinh"] = "#define ASINH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["acosh"] = "#define ACOSH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["atanh"] = "#define ATANH_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["determinant"] = "#define DETERMINANT_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["transpose"] = "#define TRANSPOSE_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["outerProduct"] = "#define OUTER_PRODUCT_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["round"] = "#define ROUND_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["roundEven"] = "#define ROUND_EVEN_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["inverse"] = "#define INVERSE_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["isinf"] = "#define IS_INF_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["isnan"] = "#define IS_NAN_USED\n";
-	actions[VS::SHADER_SPATIAL].usage_defines["trunc"] = "#define TRUNC_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["sinh"] = "#define SINH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["cosh"] = "#define COSH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["tanh"] = "#define TANH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["asinh"] = "#define ASINH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["acosh"] = "#define ACOSH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["atanh"] = "#define ATANH_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["determinant"] = "#define DETERMINANT_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["transpose"] = "#define TRANSPOSE_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["outerProduct"] = "#define OUTER_PRODUCT_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["round"] = "#define ROUND_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["roundEven"] = "#define ROUND_EVEN_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["inverse"] = "#define INVERSE_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["isinf"] = "#define IS_INF_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["isnan"] = "#define IS_NAN_USED\n";
+	actions[RS::SHADER_SPATIAL].usage_defines["trunc"] = "#define TRUNC_USED\n";
 
-	actions[VS::SHADER_SPATIAL].render_mode_defines["skip_vertex_transform"] = "#define SKIP_TRANSFORM_USED\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["world_vertex_coords"] = "#define VERTEX_WORLD_COORDS_USED\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["skip_vertex_transform"] = "#define SKIP_TRANSFORM_USED\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["world_vertex_coords"] = "#define VERTEX_WORLD_COORDS_USED\n";
 
 	// Defined in GLES3, could be implemented in GLES2 too if there's a need for it
-	//actions[VS::SHADER_SPATIAL].render_mode_defines["ensure_correct_normals"] = "#define ENSURE_CORRECT_NORMALS\n";
+	//actions[RS::SHADER_SPATIAL].render_mode_defines["ensure_correct_normals"] = "#define ENSURE_CORRECT_NORMALS\n";
 	// Defined in GLES3, might not be possible in GLES2 as gl_FrontFacing is not available
-	//actions[VS::SHADER_SPATIAL].render_mode_defines["cull_front"] = "#define DO_SIDE_CHECK\n";
-	//actions[VS::SHADER_SPATIAL].render_mode_defines["cull_disabled"] = "#define DO_SIDE_CHECK\n";
+	//actions[RS::SHADER_SPATIAL].render_mode_defines["cull_front"] = "#define DO_SIDE_CHECK\n";
+	//actions[RS::SHADER_SPATIAL].render_mode_defines["cull_disabled"] = "#define DO_SIDE_CHECK\n";
 
 	bool force_lambert = GLOBAL_GET("rendering/quality/shading/force_lambert_over_burley");
 
 	if (!force_lambert) {
-		actions[VS::SHADER_SPATIAL].render_mode_defines["diffuse_burley"] = "#define DIFFUSE_BURLEY\n";
+		actions[RS::SHADER_SPATIAL].render_mode_defines["diffuse_burley"] = "#define DIFFUSE_BURLEY\n";
 	}
 
-	actions[VS::SHADER_SPATIAL].render_mode_defines["diffuse_oren_nayar"] = "#define DIFFUSE_OREN_NAYAR\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["diffuse_lambert_wrap"] = "#define DIFFUSE_LAMBERT_WRAP\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["diffuse_toon"] = "#define DIFFUSE_TOON\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["diffuse_oren_nayar"] = "#define DIFFUSE_OREN_NAYAR\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["diffuse_lambert_wrap"] = "#define DIFFUSE_LAMBERT_WRAP\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["diffuse_toon"] = "#define DIFFUSE_TOON\n";
 
 	bool force_blinn = GLOBAL_GET("rendering/quality/shading/force_blinn_over_ggx");
 
 	if (!force_blinn) {
-		actions[VS::SHADER_SPATIAL].render_mode_defines["specular_schlick_ggx"] = "#define SPECULAR_SCHLICK_GGX\n";
+		actions[RS::SHADER_SPATIAL].render_mode_defines["specular_schlick_ggx"] = "#define SPECULAR_SCHLICK_GGX\n";
 	} else {
-		actions[VS::SHADER_SPATIAL].render_mode_defines["specular_schlick_ggx"] = "#define SPECULAR_BLINN\n";
+		actions[RS::SHADER_SPATIAL].render_mode_defines["specular_schlick_ggx"] = "#define SPECULAR_BLINN\n";
 	}
 
-	actions[VS::SHADER_SPATIAL].render_mode_defines["specular_blinn"] = "#define SPECULAR_BLINN\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["specular_phong"] = "#define SPECULAR_PHONG\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["specular_toon"] = "#define SPECULAR_TOON\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["specular_disabled"] = "#define SPECULAR_DISABLED\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["shadows_disabled"] = "#define SHADOWS_DISABLED\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["ambient_light_disabled"] = "#define AMBIENT_LIGHT_DISABLED\n";
-	actions[VS::SHADER_SPATIAL].render_mode_defines["shadow_to_opacity"] = "#define USE_SHADOW_TO_OPACITY\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["specular_blinn"] = "#define SPECULAR_BLINN\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["specular_phong"] = "#define SPECULAR_PHONG\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["specular_toon"] = "#define SPECULAR_TOON\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["specular_disabled"] = "#define SPECULAR_DISABLED\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["shadows_disabled"] = "#define SHADOWS_DISABLED\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["ambient_light_disabled"] = "#define AMBIENT_LIGHT_DISABLED\n";
+	actions[RS::SHADER_SPATIAL].render_mode_defines["shadow_to_opacity"] = "#define USE_SHADOW_TO_OPACITY\n";
 
 	// No defines for particle shaders in GLES2, there are no GPU particles
 
