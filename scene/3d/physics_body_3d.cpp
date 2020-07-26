@@ -358,6 +358,7 @@ void RigidBody3D::_direct_state_changed(Object *p_state) {
 	set_global_transform(state->get_transform());
 	linear_velocity = state->get_linear_velocity();
 	angular_velocity = state->get_angular_velocity();
+	inverse_inertia_tensor = state->get_inverse_inertia_tensor();
 	if (sleeping != state->is_sleeping()) {
 		sleeping = state->is_sleeping();
 		emit_signal(SceneStringNames::get_singleton()->sleeping_state_changed);
@@ -594,6 +595,10 @@ Vector3 RigidBody3D::get_angular_velocity() const {
 	return angular_velocity;
 }
 
+Basis RigidBody3D::get_inverse_inertia_tensor() {
+	return inverse_inertia_tensor;
+}
+
 void RigidBody3D::set_use_custom_integrator(bool p_enable) {
 	if (custom_integrator == p_enable) {
 		return;
@@ -638,8 +643,9 @@ void RigidBody3D::add_central_force(const Vector3 &p_force) {
 	PhysicsServer3D::get_singleton()->body_add_central_force(get_rid(), p_force);
 }
 
-void RigidBody3D::add_force(const Vector3 &p_force, const Vector3 &p_pos) {
-	PhysicsServer3D::get_singleton()->body_add_force(get_rid(), p_force, p_pos);
+void RigidBody3D::add_force(const Vector3 &p_force, const Vector3 &p_position) {
+	PhysicsServer3D *singleton = PhysicsServer3D::get_singleton();
+	singleton->body_add_force(get_rid(), p_force, p_position);
 }
 
 void RigidBody3D::add_torque(const Vector3 &p_torque) {
@@ -650,8 +656,9 @@ void RigidBody3D::apply_central_impulse(const Vector3 &p_impulse) {
 	PhysicsServer3D::get_singleton()->body_apply_central_impulse(get_rid(), p_impulse);
 }
 
-void RigidBody3D::apply_impulse(const Vector3 &p_pos, const Vector3 &p_impulse) {
-	PhysicsServer3D::get_singleton()->body_apply_impulse(get_rid(), p_pos, p_impulse);
+void RigidBody3D::apply_impulse(const Vector3 &p_impulse, const Vector3 &p_position) {
+	PhysicsServer3D *singleton = PhysicsServer3D::get_singleton();
+	singleton->body_apply_impulse(get_rid(), p_impulse, p_position);
 }
 
 void RigidBody3D::apply_torque_impulse(const Vector3 &p_impulse) {
@@ -758,6 +765,8 @@ void RigidBody3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_angular_velocity", "angular_velocity"), &RigidBody3D::set_angular_velocity);
 	ClassDB::bind_method(D_METHOD("get_angular_velocity"), &RigidBody3D::get_angular_velocity);
 
+	ClassDB::bind_method(D_METHOD("get_inverse_inertia_tensor"), &RigidBody3D::get_inverse_inertia_tensor);
+
 	ClassDB::bind_method(D_METHOD("set_gravity_scale", "gravity_scale"), &RigidBody3D::set_gravity_scale);
 	ClassDB::bind_method(D_METHOD("get_gravity_scale"), &RigidBody3D::get_gravity_scale);
 
@@ -782,11 +791,11 @@ void RigidBody3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_axis_velocity", "axis_velocity"), &RigidBody3D::set_axis_velocity);
 
 	ClassDB::bind_method(D_METHOD("add_central_force", "force"), &RigidBody3D::add_central_force);
-	ClassDB::bind_method(D_METHOD("add_force", "force", "position"), &RigidBody3D::add_force);
+	ClassDB::bind_method(D_METHOD("add_force", "force", "position"), &RigidBody3D::add_force, Vector3());
 	ClassDB::bind_method(D_METHOD("add_torque", "torque"), &RigidBody3D::add_torque);
 
 	ClassDB::bind_method(D_METHOD("apply_central_impulse", "impulse"), &RigidBody3D::apply_central_impulse);
-	ClassDB::bind_method(D_METHOD("apply_impulse", "position", "impulse"), &RigidBody3D::apply_impulse);
+	ClassDB::bind_method(D_METHOD("apply_impulse", "impulse", "position"), &RigidBody3D::apply_impulse, Vector3());
 	ClassDB::bind_method(D_METHOD("apply_torque_impulse", "impulse"), &RigidBody3D::apply_torque_impulse);
 
 	ClassDB::bind_method(D_METHOD("set_sleeping", "sleeping"), &RigidBody3D::set_sleeping);
@@ -1239,12 +1248,12 @@ void KinematicBody3D::_direct_state_changed(Object *p_state) {
 
 KinematicBody3D::KinematicBody3D() :
 		PhysicsBody3D(PhysicsServer3D::BODY_MODE_KINEMATIC) {
-	margin = 0.001;
 	locked_axis = 0;
 	on_floor = false;
 	on_ceiling = false;
 	on_wall = false;
 
+	set_safe_margin(0.001);
 	PhysicsServer3D::get_singleton()->body_set_force_integration_callback(get_rid(), this, "_direct_state_changed");
 }
 
@@ -1372,8 +1381,8 @@ void PhysicalBone3D::apply_central_impulse(const Vector3 &p_impulse) {
 	PhysicsServer3D::get_singleton()->body_apply_central_impulse(get_rid(), p_impulse);
 }
 
-void PhysicalBone3D::apply_impulse(const Vector3 &p_pos, const Vector3 &p_impulse) {
-	PhysicsServer3D::get_singleton()->body_apply_impulse(get_rid(), p_pos, p_impulse);
+void PhysicalBone3D::apply_impulse(const Vector3 &p_impulse, const Vector3 &p_position) {
+	PhysicsServer3D::get_singleton()->body_apply_impulse(get_rid(), p_impulse, p_position);
 }
 
 void PhysicalBone3D::reset_physics_simulation_state() {
@@ -2099,7 +2108,7 @@ void PhysicalBone3D::_direct_state_changed(Object *p_state) {
 
 void PhysicalBone3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("apply_central_impulse", "impulse"), &PhysicalBone3D::apply_central_impulse);
-	ClassDB::bind_method(D_METHOD("apply_impulse", "position", "impulse"), &PhysicalBone3D::apply_impulse);
+	ClassDB::bind_method(D_METHOD("apply_impulse", "impulse", "position"), &PhysicalBone3D::apply_impulse, Vector3());
 
 	ClassDB::bind_method(D_METHOD("_direct_state_changed"), &PhysicalBone3D::_direct_state_changed);
 

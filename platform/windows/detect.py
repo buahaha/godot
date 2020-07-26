@@ -128,7 +128,9 @@ def setup_msvc_manual(env):
         print("Compiled program architecture will be a 32 bit executable. (forcing bits=32).")
     else:
         print(
-            "Failed to manually detect MSVC compiler architecture version... Defaulting to 32bit executable settings (forcing bits=32). Compilation attempt will continue, but SCons can not detect for what architecture this build is compiled for. You should check your settings/compilation setup, or avoid setting VCINSTALLDIR."
+            "Failed to manually detect MSVC compiler architecture version... Defaulting to 32bit executable settings"
+            " (forcing bits=32). Compilation attempt will continue, but SCons can not detect for what architecture this"
+            " build is compiled for. You should check your settings/compilation setup, or avoid setting VCINSTALLDIR."
         )
 
 
@@ -196,7 +198,7 @@ def configure_msvc(env, manual_msvc_config):
 
     elif env["target"] == "debug":
         env.AppendUnique(CCFLAGS=["/Z7", "/Od", "/EHsc"])
-        env.AppendUnique(CPPDEFINES=["DEBUG_ENABLED", "DEBUG_MEMORY_ENABLED", "D3D_DEBUG_INFO"])
+        env.AppendUnique(CPPDEFINES=["DEBUG_ENABLED"])
         env.Append(LINKFLAGS=["/SUBSYSTEM:CONSOLE"])
         env.Append(LINKFLAGS=["/DEBUG"])
 
@@ -333,7 +335,7 @@ def configure_mingw(env):
 
     elif env["target"] == "debug":
         env.Append(CCFLAGS=["-g3"])
-        env.Append(CPPDEFINES=["DEBUG_ENABLED", "DEBUG_MEMORY_ENABLED"])
+        env.Append(CPPDEFINES=["DEBUG_ENABLED"])
 
     ## Compiler configuration
 

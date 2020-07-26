@@ -170,7 +170,7 @@ void DisplayServerWindows::clipboard_set(const String &p_text) {
 
 	// Convert LF line endings to CRLF in clipboard content
 	// Otherwise, line endings won't be visible when pasted in other software
-	String text = p_text.replace("\n", "\r\n");
+	String text = p_text.replace("\r\n", "\n").replace("\n", "\r\n"); // avoid \r\r\n
 
 	if (!OpenClipboard(windows[last_focused_window].hWnd)) {
 		ERR_FAIL_MSG("Unable to open clipboard.");
@@ -476,6 +476,7 @@ DisplayServer::WindowID DisplayServerWindows::create_sub_window(WindowMode p_mod
 	_THREAD_SAFE_METHOD_
 
 	WindowID window_id = _create_window(p_mode, p_flags, p_rect);
+	ERR_FAIL_COND_V_MSG(window_id == INVALID_WINDOW_ID, INVALID_WINDOW_ID, "Failed to create sub window.");
 
 	WindowData &wd = windows[window_id];
 
@@ -494,13 +495,17 @@ DisplayServer::WindowID DisplayServerWindows::create_sub_window(WindowMode p_mod
 
 	_update_window_style(window_id);
 
-	ShowWindow(wd.hWnd, (p_flags & WINDOW_FLAG_NO_FOCUS_BIT) ? SW_SHOWNOACTIVATE : SW_SHOW); // Show The Window
-	if (!(p_flags & WINDOW_FLAG_NO_FOCUS_BIT)) {
+	return window_id;
+}
+
+void DisplayServerWindows::show_window(WindowID p_id) {
+	WindowData &wd = windows[p_id];
+
+	ShowWindow(wd.hWnd, wd.no_focus ? SW_SHOWNOACTIVATE : SW_SHOW); // Show The Window
+	if (!wd.no_focus) {
 		SetForegroundWindow(wd.hWnd); // Slightly Higher Priority
 		SetFocus(wd.hWnd); // Sets Keyboard Focus To
 	}
-
-	return window_id;
 }
 
 void DisplayServerWindows::delete_sub_window(WindowID p_window) {
@@ -1366,7 +1371,7 @@ void DisplayServerWindows::cursor_set_custom_image(const RES &p_cursor, CursorSh
 	}
 }
 
-bool DisplayServerWindows::get_swap_ok_cancel() {
+bool DisplayServerWindows::get_swap_cancel_ok() {
 	return true;
 }
 
@@ -1773,12 +1778,20 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	};
 
 	WindowID window_id = INVALID_WINDOW_ID;
+	bool window_created = false;
 
 	for (Map<WindowID, WindowData>::Element *E = windows.front(); E; E = E->next()) {
 		if (E->get().hWnd == hWnd) {
 			window_id = E->key();
+			window_created = true;
 			break;
 		}
+	}
+
+	if (!window_created) {
+		// Window creation in progress.
+		window_id = window_id_counter;
+		ERR_FAIL_COND_V(!windows.has(window_id), 0);
 	}
 
 	switch (uMsg) // Check For Windows Messages
@@ -1790,6 +1803,12 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			// Restore mouse mode
 			_set_mouse_mode_impl(mouse_mode);
 
+			if (!app_focused) {
+				if (OS::get_singleton()->get_main_loop()) {
+					OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_APPLICATION_FOCUS_IN);
+				}
+				app_focused = true;
+			}
 			break;
 		}
 		case WM_KILLFOCUS: {
@@ -1804,6 +1823,19 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				_touch_event(window_id, false, E->get().x, E->get().y, E->key());
 			}
 			touch_state.clear();
+
+			bool self_steal = false;
+			HWND new_hwnd = (HWND)wParam;
+			if (IsWindow(new_hwnd)) {
+				self_steal = true;
+			}
+
+			if (!self_steal) {
+				if (OS::get_singleton()->get_main_loop()) {
+					OS::get_singleton()->get_main_loop()->notification(MainLoop::NOTIFICATION_APPLICATION_FOCUS_OUT);
+				}
+				app_focused = false;
+			}
 
 			break;
 		}
@@ -2493,7 +2525,7 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 					windows[window_id].height = window_h;
 
 #if defined(VULKAN_ENABLED)
-					if (rendering_driver == "vulkan") {
+					if ((rendering_driver == "vulkan") && window_created) {
 						context_vulkan->window_resize(window_id, windows[window_id].width, windows[window_id].height);
 					}
 #endif
@@ -2845,11 +2877,32 @@ DisplayServer::WindowID DisplayServerWindows::_create_window(WindowMode p_mode, 
 	WindowRect.top = p_rect.position.y;
 	WindowRect.bottom = p_rect.position.y + p_rect.size.y;
 
+	if (p_mode == WINDOW_MODE_FULLSCREEN) {
+		int nearest_area = 0;
+		Rect2i screen_rect;
+		for (int i = 0; i < get_screen_count(); i++) {
+			Rect2i r;
+			r.position = screen_get_position(i);
+			r.size = screen_get_size(i);
+			Rect2 inters = r.clip(p_rect);
+			int area = inters.size.width * inters.size.height;
+			if (area >= nearest_area) {
+				screen_rect = r;
+				nearest_area = area;
+			}
+		}
+
+		WindowRect.left = screen_rect.position.x;
+		WindowRect.right = screen_rect.position.x + screen_rect.size.x;
+		WindowRect.top = screen_rect.position.y;
+		WindowRect.bottom = screen_rect.position.y + screen_rect.size.y;
+	}
+
 	AdjustWindowRectEx(&WindowRect, dwStyle, FALSE, dwExStyle);
 
 	WindowID id = window_id_counter;
 	{
-		WindowData wd;
+		WindowData &wd = windows[id];
 
 		wd.hWnd = CreateWindowExW(
 				dwExStyle,
@@ -2864,6 +2917,7 @@ DisplayServer::WindowID DisplayServerWindows::_create_window(WindowMode p_mode, 
 				nullptr, nullptr, hInstance, nullptr);
 		if (!wd.hWnd) {
 			MessageBoxW(nullptr, L"Window Creation Error.", L"ERROR", MB_OK | MB_ICONEXCLAMATION);
+			windows.erase(id);
 			return INVALID_WINDOW_ID;
 		}
 #ifdef VULKAN_ENABLED
@@ -2872,7 +2926,8 @@ DisplayServer::WindowID DisplayServerWindows::_create_window(WindowMode p_mode, 
 			if (context_vulkan->window_create(id, wd.hWnd, hInstance, WindowRect.right - WindowRect.left, WindowRect.bottom - WindowRect.top) == -1) {
 				memdelete(context_vulkan);
 				context_vulkan = nullptr;
-				ERR_FAIL_V(INVALID_WINDOW_ID);
+				windows.erase(id);
+				ERR_FAIL_V_MSG(INVALID_WINDOW_ID, "Failed to create Vulkan Window.");
 			}
 		}
 #endif
@@ -2929,8 +2984,6 @@ DisplayServer::WindowID DisplayServerWindows::_create_window(WindowMode p_mode, 
 		wd.last_pos = p_rect.position;
 		wd.width = p_rect.size.width;
 		wd.height = p_rect.size.height;
-
-		windows[id] = wd;
 
 		window_id_counter++;
 	}
@@ -3062,16 +3115,17 @@ DisplayServerWindows::DisplayServerWindows(const String &p_rendering_driver, Win
 	Point2i window_position(
 			(screen_get_size(0).width - p_resolution.width) / 2,
 			(screen_get_size(0).height - p_resolution.height) / 2);
+
 	WindowID main_window = _create_window(p_mode, 0, Rect2i(window_position, p_resolution));
+	ERR_FAIL_COND_MSG(main_window == INVALID_WINDOW_ID, "Failed to create main window.");
+
 	for (int i = 0; i < WINDOW_FLAG_MAX; i++) {
 		if (p_flags & (1 << i)) {
 			window_set_flag(WindowFlags(i), true, main_window);
 		}
 	}
 
-	ShowWindow(windows[MAIN_WINDOW_ID].hWnd, SW_SHOW); // Show The Window
-	SetForegroundWindow(windows[MAIN_WINDOW_ID].hWnd); // Slightly Higher Priority
-	SetFocus(windows[MAIN_WINDOW_ID].hWnd); // Sets Keyboard Focus To
+	show_window(MAIN_WINDOW_ID);
 
 #if defined(VULKAN_ENABLED)
 
@@ -3126,7 +3180,13 @@ Vector<String> DisplayServerWindows::get_rendering_drivers_func() {
 }
 
 DisplayServer *DisplayServerWindows::create_func(const String &p_rendering_driver, WindowMode p_mode, uint32_t p_flags, const Vector2i &p_resolution, Error &r_error) {
-	return memnew(DisplayServerWindows(p_rendering_driver, p_mode, p_flags, p_resolution, r_error));
+	DisplayServer *ds = memnew(DisplayServerWindows(p_rendering_driver, p_mode, p_flags, p_resolution, r_error));
+	if (r_error != OK) {
+		ds->alert("Your video card driver does not support any of the supported Vulkan versions.\n"
+				  "Please update your drivers or if you have a very old or integrated GPU upgrade it.",
+				"Unable to initialize Video driver");
+	}
+	return ds;
 }
 
 void DisplayServerWindows::register_windows_driver() {

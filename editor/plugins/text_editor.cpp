@@ -33,45 +33,34 @@
 #include "core/os/keyboard.h"
 #include "editor/editor_node.h"
 
-void TextEditor::add_syntax_highlighter(SyntaxHighlighter *p_highlighter) {
-	highlighters[p_highlighter->get_name()] = p_highlighter;
-	highlighter_menu->add_radio_check_item(p_highlighter->get_name());
+void TextEditor::add_syntax_highlighter(Ref<EditorSyntaxHighlighter> p_highlighter) {
+	ERR_FAIL_COND(p_highlighter.is_null());
+
+	highlighters[p_highlighter->_get_name()] = p_highlighter;
+	highlighter_menu->add_radio_check_item(p_highlighter->_get_name());
 }
 
-void TextEditor::set_syntax_highlighter(SyntaxHighlighter *p_highlighter) {
-	TextEdit *te = code_editor->get_text_edit();
-	te->_set_syntax_highlighting(p_highlighter);
-	if (p_highlighter != nullptr) {
-		highlighter_menu->set_item_checked(highlighter_menu->get_item_idx_from_text(p_highlighter->get_name()), true);
-	} else {
-		highlighter_menu->set_item_checked(highlighter_menu->get_item_idx_from_text("Standard"), true);
+void TextEditor::set_syntax_highlighter(Ref<EditorSyntaxHighlighter> p_highlighter) {
+	ERR_FAIL_COND(p_highlighter.is_null());
+
+	Map<String, Ref<EditorSyntaxHighlighter>>::Element *el = highlighters.front();
+	while (el != nullptr) {
+		int highlighter_index = highlighter_menu->get_item_idx_from_text(el->key());
+		highlighter_menu->set_item_checked(highlighter_index, el->value() == p_highlighter);
+		el = el->next();
 	}
 
-	// little work around. GDScript highlighter goes through text_edit for colours,
-	// so to remove all colours we need to set and unset them here.
-	if (p_highlighter == nullptr) { // standard
-		TextEdit *text_edit = code_editor->get_text_edit();
-		text_edit->add_theme_color_override("number_color", colors_cache.font_color);
-		text_edit->add_theme_color_override("function_color", colors_cache.font_color);
-		text_edit->add_theme_color_override("number_color", colors_cache.font_color);
-		text_edit->add_theme_color_override("member_variable_color", colors_cache.font_color);
-	} else {
-		_load_theme_settings();
-	}
+	TextEdit *te = code_editor->get_text_edit();
+	te->set_syntax_highlighter(p_highlighter);
 }
 
 void TextEditor::_change_syntax_highlighter(int p_idx) {
-	Map<String, SyntaxHighlighter *>::Element *el = highlighters.front();
-	while (el != nullptr) {
-		highlighter_menu->set_item_checked(highlighter_menu->get_item_idx_from_text(el->key()), false);
-		el = el->next();
-	}
 	set_syntax_highlighter(highlighters[highlighter_menu->get_item_text(p_idx)]);
 }
 
 void TextEditor::_load_theme_settings() {
 	TextEdit *text_edit = code_editor->get_text_edit();
-	text_edit->clear_colors();
+	text_edit->get_syntax_highlighter()->update_cache();
 
 	Color background_color = EDITOR_GET("text_editor/highlighting/background_color");
 	Color completion_background_color = EDITOR_GET("text_editor/highlighting/completion_background_color");
@@ -89,9 +78,6 @@ void TextEditor::_load_theme_settings() {
 	Color current_line_color = EDITOR_GET("text_editor/highlighting/current_line_color");
 	Color line_length_guideline_color = EDITOR_GET("text_editor/highlighting/line_length_guideline_color");
 	Color word_highlighted_color = EDITOR_GET("text_editor/highlighting/word_highlighted_color");
-	Color number_color = EDITOR_GET("text_editor/highlighting/number_color");
-	Color function_color = EDITOR_GET("text_editor/highlighting/function_color");
-	Color member_variable_color = EDITOR_GET("text_editor/highlighting/member_variable_color");
 	Color mark_color = EDITOR_GET("text_editor/highlighting/mark_color");
 	Color bookmark_color = EDITOR_GET("text_editor/highlighting/bookmark_color");
 	Color breakpoint_color = EDITOR_GET("text_editor/highlighting/breakpoint_color");
@@ -99,12 +85,6 @@ void TextEditor::_load_theme_settings() {
 	Color code_folding_color = EDITOR_GET("text_editor/highlighting/code_folding_color");
 	Color search_result_color = EDITOR_GET("text_editor/highlighting/search_result_color");
 	Color search_result_border_color = EDITOR_GET("text_editor/highlighting/search_result_border_color");
-	Color symbol_color = EDITOR_GET("text_editor/highlighting/symbol_color");
-	Color keyword_color = EDITOR_GET("text_editor/highlighting/keyword_color");
-	Color basetype_color = EDITOR_GET("text_editor/highlighting/base_type_color");
-	Color type_color = EDITOR_GET("text_editor/highlighting/engine_type_color");
-	Color comment_color = EDITOR_GET("text_editor/highlighting/comment_color");
-	Color string_color = EDITOR_GET("text_editor/highlighting/string_color");
 
 	text_edit->add_theme_color_override("background_color", background_color);
 	text_edit->add_theme_color_override("completion_background_color", completion_background_color);
@@ -122,9 +102,6 @@ void TextEditor::_load_theme_settings() {
 	text_edit->add_theme_color_override("current_line_color", current_line_color);
 	text_edit->add_theme_color_override("line_length_guideline_color", line_length_guideline_color);
 	text_edit->add_theme_color_override("word_highlighted_color", word_highlighted_color);
-	text_edit->add_theme_color_override("number_color", number_color);
-	text_edit->add_theme_color_override("function_color", function_color);
-	text_edit->add_theme_color_override("member_variable_color", member_variable_color);
 	text_edit->add_theme_color_override("breakpoint_color", breakpoint_color);
 	text_edit->add_theme_color_override("executing_line_color", executing_line_color);
 	text_edit->add_theme_color_override("mark_color", mark_color);
@@ -132,17 +109,8 @@ void TextEditor::_load_theme_settings() {
 	text_edit->add_theme_color_override("code_folding_color", code_folding_color);
 	text_edit->add_theme_color_override("search_result_color", search_result_color);
 	text_edit->add_theme_color_override("search_result_border_color", search_result_border_color);
-	text_edit->add_theme_color_override("symbol_color", symbol_color);
 
 	text_edit->add_theme_constant_override("line_spacing", EDITOR_DEF("text_editor/theme/line_spacing", 6));
-
-	colors_cache.font_color = text_color;
-	colors_cache.symbol_color = symbol_color;
-	colors_cache.keyword_color = keyword_color;
-	colors_cache.basetype_color = basetype_color;
-	colors_cache.type_color = type_color;
-	colors_cache.comment_color = comment_color;
-	colors_cache.string_color = string_color;
 }
 
 String TextEditor::get_name() {
@@ -151,6 +119,9 @@ String TextEditor::get_name() {
 	if (text_file->get_path().find("local://") == -1 && text_file->get_path().find("::") == -1) {
 		name = text_file->get_path().get_file();
 		if (is_unsaved()) {
+			if (text_file->get_path().empty()) {
+				name = TTR("[unsaved]");
+			}
 			name += "(*)";
 		}
 	} else if (text_file->get_name() != "") {
@@ -163,7 +134,7 @@ String TextEditor::get_name() {
 }
 
 Ref<Texture2D> TextEditor::get_theme_icon() {
-	return EditorNode::get_singleton()->get_object_icon(text_file.operator->(), "");
+	return EditorNode::get_singleton()->get_object_icon(text_file.ptr(), "");
 }
 
 RES TextEditor::get_edited_resource() const {
@@ -171,7 +142,8 @@ RES TextEditor::get_edited_resource() const {
 }
 
 void TextEditor::set_edited_resource(const RES &p_res) {
-	ERR_FAIL_COND(!text_file.is_null());
+	ERR_FAIL_COND(text_file.is_valid());
+	ERR_FAIL_COND(p_res.is_null());
 
 	text_file = p_res;
 
@@ -181,6 +153,16 @@ void TextEditor::set_edited_resource(const RES &p_res) {
 
 	emit_signal("name_changed");
 	code_editor->update_line_and_column();
+}
+
+void TextEditor::enable_editor() {
+	if (editor_enabled) {
+		return;
+	}
+
+	editor_enabled = true;
+
+	_load_theme_settings();
 }
 
 void TextEditor::add_callback(const String &p_function, PackedStringArray p_args) {
@@ -257,7 +239,10 @@ void TextEditor::apply_code() {
 }
 
 bool TextEditor::is_unsaved() {
-	return code_editor->get_text_edit()->get_version() != code_editor->get_text_edit()->get_saved_version();
+	const bool unsaved =
+			code_editor->get_text_edit()->get_version() != code_editor->get_text_edit()->get_saved_version() ||
+			text_file->get_path().empty(); // In memory.
+	return unsaved;
 }
 
 Variant TextEditor::get_edit_state() {
@@ -274,6 +259,8 @@ void TextEditor::set_edit_state(const Variant &p_state) {
 			_change_syntax_highlighter(idx);
 		}
 	}
+
+	ensure_focus();
 }
 
 void TextEditor::trim_trailing_whitespace() {
@@ -338,14 +325,6 @@ Control *TextEditor::get_edit_menu() {
 
 void TextEditor::clear_edit_menu() {
 	memdelete(edit_hb);
-}
-
-void TextEditor::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_READY:
-			_load_theme_settings();
-			break;
-	}
 }
 
 void TextEditor::_edit_option(int p_op) {
@@ -471,6 +450,7 @@ void TextEditor::_convert_case(CodeTextEditor::CaseStyle p_case) {
 }
 
 void TextEditor::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("add_syntax_highlighter", "highlighter"), &TextEditor::add_syntax_highlighter);
 }
 
 static ScriptEditorBase *create_editor(const RES &p_resource) {
@@ -634,13 +614,20 @@ TextEditor::TextEditor() {
 	convert_case->add_shortcut(ED_SHORTCUT("script_text_editor/capitalize", TTR("Capitalize")), EDIT_CAPITALIZE);
 	convert_case->connect("id_pressed", callable_mp(this, &TextEditor::_edit_option));
 
-	highlighters["Standard"] = nullptr;
 	highlighter_menu = memnew(PopupMenu);
 	highlighter_menu->set_name("highlighter_menu");
 	edit_menu->get_popup()->add_child(highlighter_menu);
 	edit_menu->get_popup()->add_submenu_item(TTR("Syntax Highlighter"), "highlighter_menu");
-	highlighter_menu->add_radio_check_item(TTR("Standard"));
 	highlighter_menu->connect("id_pressed", callable_mp(this, &TextEditor::_change_syntax_highlighter));
+
+	Ref<EditorPlainTextSyntaxHighlighter> plain_highlighter;
+	plain_highlighter.instance();
+	add_syntax_highlighter(plain_highlighter);
+
+	Ref<EditorStandardSyntaxHighlighter> highlighter;
+	highlighter.instance();
+	add_syntax_highlighter(highlighter);
+	set_syntax_highlighter(plain_highlighter);
 
 	MenuButton *goto_menu = memnew(MenuButton);
 	edit_hb->add_child(goto_menu);
@@ -666,11 +653,6 @@ TextEditor::TextEditor() {
 }
 
 TextEditor::~TextEditor() {
-	for (const Map<String, SyntaxHighlighter *>::Element *E = highlighters.front(); E; E = E->next()) {
-		if (E->get() != nullptr) {
-			memdelete(E->get());
-		}
-	}
 	highlighters.clear();
 }
 

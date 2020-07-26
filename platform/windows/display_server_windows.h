@@ -317,6 +317,7 @@ private:
 	int pressrc;
 	HINSTANCE hInstance; // Holds The Instance Of The Application
 	String rendering_driver;
+	bool app_focused = false;
 
 	struct WindowData {
 		HWND hWnd;
@@ -459,6 +460,7 @@ public:
 	virtual Vector<DisplayServer::WindowID> get_window_list() const;
 
 	virtual WindowID create_sub_window(WindowMode p_mode, uint32_t p_flags, const Rect2i &p_rect = Rect2i());
+	virtual void show_window(WindowID p_window);
 	virtual void delete_sub_window(WindowID p_window);
 
 	virtual WindowID get_window_at_screen_position(const Point2i &p_position) const;
@@ -519,7 +521,7 @@ public:
 	virtual CursorShape cursor_get_shape() const;
 	virtual void cursor_set_custom_image(const RES &p_cursor, CursorShape p_shape = CURSOR_ARROW, const Vector2 &p_hotspot = Vector2());
 
-	virtual bool get_swap_ok_cancel();
+	virtual bool get_swap_cancel_ok();
 
 	virtual void enable_for_stealing_focus(OS::ProcessID pid);
 

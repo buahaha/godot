@@ -154,7 +154,7 @@ VkBool32 VulkanContext::_check_layers(uint32_t check_count, const char **check_n
 			}
 		}
 		if (!found) {
-			ERR_PRINT("Cant find layer: " + String(check_names[i]));
+			ERR_PRINT("Can't find layer: " + String(check_names[i]));
 			return 0;
 		}
 	}
@@ -343,6 +343,8 @@ Error VulkanContext::_create_physical_device() {
 			"Do you have a compatible Vulkan installable client driver (ICD) installed?\n"
 			"Please look at the Getting Started guide for additional information.\n"
 			"vkCreateInstance Failure");
+
+	inst_initialized = true;
 
 	/* Make initial call to query gpu_count, then second call for gpu info*/
 	err = vkEnumeratePhysicalDevices(inst, &gpu_count, nullptr);
@@ -1133,6 +1135,7 @@ Error VulkanContext::initialize() {
 		return err;
 	}
 
+	device_initialized = true;
 	return OK;
 }
 
@@ -1584,15 +1587,21 @@ VulkanContext::~VulkanContext() {
 	if (queue_props) {
 		free(queue_props);
 	}
-	for (uint32_t i = 0; i < FRAME_LAG; i++) {
-		vkDestroyFence(device, fences[i], nullptr);
-		vkDestroySemaphore(device, image_acquired_semaphores[i], nullptr);
-		vkDestroySemaphore(device, draw_complete_semaphores[i], nullptr);
-		if (separate_present_queue) {
-			vkDestroySemaphore(device, image_ownership_semaphores[i], nullptr);
+	if (device_initialized) {
+		for (uint32_t i = 0; i < FRAME_LAG; i++) {
+			vkDestroyFence(device, fences[i], nullptr);
+			vkDestroySemaphore(device, image_acquired_semaphores[i], nullptr);
+			vkDestroySemaphore(device, draw_complete_semaphores[i], nullptr);
+			if (separate_present_queue) {
+				vkDestroySemaphore(device, image_ownership_semaphores[i], nullptr);
+			}
 		}
+		if (inst_initialized) {
+			DestroyDebugUtilsMessengerEXT(inst, dbg_messenger, nullptr);
+		}
+		vkDestroyDevice(device, nullptr);
 	}
-	DestroyDebugUtilsMessengerEXT(inst, dbg_messenger, nullptr);
-	vkDestroyDevice(device, nullptr);
-	vkDestroyInstance(inst, nullptr);
+	if (inst_initialized) {
+		vkDestroyInstance(inst, nullptr);
+	}
 }

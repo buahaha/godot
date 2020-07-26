@@ -72,7 +72,6 @@ env_base.disabled_modules = []
 env_base.use_ptrcall = False
 env_base.module_version_string = ""
 env_base.msvc = False
-env_base.stable_release = version.status == "stable"
 
 env_base.__class__.disable_module = methods.disable_module
 
@@ -116,6 +115,7 @@ opts.Add(EnumVariable("target", "Compilation target", "debug", ("debug", "releas
 opts.Add(EnumVariable("optimize", "Optimization type", "speed", ("speed", "size")))
 
 opts.Add(BoolVariable("tools", "Build the tools (a.k.a. the Godot editor)", True))
+opts.Add(BoolVariable("tests", "Build the unit tests", False))
 opts.Add(BoolVariable("use_lto", "Use link-time optimization", False))
 opts.Add(BoolVariable("use_precise_math_checks", "Math checks use very precise epsilon (debug option)", False))
 
@@ -129,7 +129,7 @@ opts.Add("custom_modules", "A list of comma-separated directory paths containing
 opts.Add(BoolVariable("verbose", "Enable verbose output for the compilation", False))
 opts.Add(BoolVariable("progress", "Show a progress indicator during compilation", True))
 opts.Add(EnumVariable("warnings", "Level of compilation warnings", "all", ("extra", "all", "moderate", "no")))
-opts.Add(BoolVariable("werror", "Treat compiler warnings as errors", not env_base.stable_release))
+opts.Add(BoolVariable("werror", "Treat compiler warnings as errors", False))
 opts.Add(BoolVariable("dev", "If yes, alias for verbose=yes warnings=extra werror=yes", False))
 opts.Add("extra_suffix", "Custom extra suffix added to the base filename of all generated binary files", "")
 opts.Add(BoolVariable("vsproj", "Generate a Visual Studio solution", False))
@@ -250,6 +250,10 @@ if env_base["target"] == "debug":
     # http://scons.org/doc/production/HTML/scons-user/ch06s04.html
     env_base.SetOption("implicit_cache", 1)
 
+if not env_base["tools"]:
+    # Export templates can't run unit test tool.
+    env_base["tests"] = False
+
 if env_base["no_editor_splash"]:
     env_base.Append(CPPDEFINES=["NO_EDITOR_SPLASH"])
 
@@ -313,6 +317,8 @@ if selected_platform in platform_list:
         env["verbose"] = True
         env["warnings"] = "extra"
         env["werror"] = True
+        if env["tools"]:
+            env["tests"] = True
 
     if env["vsproj"]:
         env.vs_incs = []
@@ -455,6 +461,7 @@ if selected_platform in platform_list:
         all_plus_warnings = ["-Wwrite-strings"]
 
         if methods.using_gcc(env):
+            env.Append(CCFLAGS=["-Wno-misleading-indentation"])
             if cc_version_major >= 7:
                 shadow_local_warning = ["-Wshadow-local"]
 
@@ -610,8 +617,9 @@ if selected_platform in platform_list:
     editor_module_list = ["regex"]
     if env["tools"] and not env.module_check_dependencies("tools", editor_module_list):
         print(
-            "Build option 'module_" + x + "_enabled=no' cannot be used with 'tools=yes' (editor), "
-            "only with 'tools=no' (export template)."
+            "Build option 'module_"
+            + x
+            + "_enabled=no' cannot be used with 'tools=yes' (editor), only with 'tools=no' (export template)."
         )
         Exit(255)
 
@@ -648,8 +656,7 @@ if selected_platform in platform_list:
 
     Export("env")
 
-    # build subdirs, the build order is dependent on link order.
-
+    # Build subdirs, the build order is dependent on link order.
     SConscript("core/SCsub")
     SConscript("servers/SCsub")
     SConscript("scene/SCsub")
@@ -658,9 +665,11 @@ if selected_platform in platform_list:
 
     SConscript("platform/SCsub")
     SConscript("modules/SCsub")
+    if env["tests"]:
+        SConscript("tests/SCsub")
     SConscript("main/SCsub")
 
-    SConscript("platform/" + selected_platform + "/SCsub")  # build selected platform
+    SConscript("platform/" + selected_platform + "/SCsub")  # Build selected platform.
 
     # Microsoft Visual Studio Project Generation
     if env["vsproj"]:

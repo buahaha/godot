@@ -646,7 +646,7 @@ void TileSetEditor::_on_tileset_toolbar_button_pressed(int p_index) {
 	option = p_index;
 	switch (option) {
 		case TOOL_TILESET_ADD_TEXTURE: {
-			texture_dialog->popup_centered_ratio();
+			texture_dialog->popup_file_dialog();
 		} break;
 		case TOOL_TILESET_REMOVE_TEXTURE: {
 			if (get_current_texture().is_valid()) {
@@ -698,7 +698,7 @@ void TileSetEditor::_on_tileset_toolbar_confirm() {
 			List<int> ids;
 			tileset->get_tile_list(&ids);
 
-			undo_redo->create_action(TTR(option == TOOL_TILESET_MERGE_SCENE ? "Merge Tileset from Scene" : "Create Tileset from Scene"));
+			undo_redo->create_action(option == TOOL_TILESET_MERGE_SCENE ? TTR("Merge Tileset from Scene") : TTR("Create Tileset from Scene"));
 			undo_redo->add_do_method(this, "_undo_redo_import_scene", scene, option == TOOL_TILESET_MERGE_SCENE);
 			undo_redo->add_undo_method(tileset.ptr(), "clear");
 			for (List<int>::Element *E = ids.front(); E; E = E->next()) {
@@ -1977,7 +1977,7 @@ void TileSetEditor::_set_edited_shape_points(const Vector<Vector2> &points) {
 	if (convex.is_valid()) {
 		undo_redo->add_do_method(convex.ptr(), "set_points", points);
 		undo_redo->add_undo_method(convex.ptr(), "set_points", _get_edited_shape_points());
-	} else if (concave.is_valid()) {
+	} else if (concave.is_valid() && points.size() > 1) {
 		PackedVector2Array segments;
 		for (int i = 0; i < points.size() - 1; i++) {
 			segments.push_back(points[i]);
@@ -2669,7 +2669,7 @@ void TileSetEditor::draw_polygon_shapes() {
 					workspace->draw_polygon(polygon, colors);
 
 					if (coord == edited_shape_coord || tileset->tile_get_tile_mode(get_current_tile()) == TileSet::SINGLE_TILE) {
-						if (!creating_shape) {
+						if (!creating_shape && polygon.size() > 1) {
 							for (int j = 0; j < polygon.size() - 1; j++) {
 								workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
 							}
@@ -2706,13 +2706,11 @@ void TileSetEditor::draw_polygon_shapes() {
 					}
 					workspace->draw_polygon(polygon, colors);
 
-					if (!creating_shape) {
-						if (polygon.size() > 1) {
-							for (int j = 0; j < polygon.size() - 1; j++) {
-								workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
-							}
-							workspace->draw_line(polygon[polygon.size() - 1], polygon[0], c_border, 1);
+					if (!creating_shape && polygon.size() > 1) {
+						for (int j = 0; j < polygon.size() - 1; j++) {
+							workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
 						}
+						workspace->draw_line(polygon[polygon.size() - 1], polygon[0], c_border, 1);
 					}
 					if (shape == edited_occlusion_shape) {
 						draw_handles = true;
@@ -2756,7 +2754,7 @@ void TileSetEditor::draw_polygon_shapes() {
 						workspace->draw_polygon(polygon, colors);
 
 						if (coord == edited_shape_coord) {
-							if (!creating_shape) {
+							if (!creating_shape && polygon.size() > 1) {
 								for (int j = 0; j < polygon.size() - 1; j++) {
 									workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
 								}
@@ -2796,7 +2794,7 @@ void TileSetEditor::draw_polygon_shapes() {
 					}
 					workspace->draw_polygon(polygon, colors);
 
-					if (!creating_shape) {
+					if (!creating_shape && polygon.size() > 1) {
 						for (int j = 0; j < polygon.size() - 1; j++) {
 							workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
 						}
@@ -2845,7 +2843,7 @@ void TileSetEditor::draw_polygon_shapes() {
 						workspace->draw_polygon(polygon, colors);
 
 						if (coord == edited_shape_coord) {
-							if (!creating_shape) {
+							if (!creating_shape && polygon.size() > 1) {
 								for (int j = 0; j < polygon.size() - 1; j++) {
 									workspace->draw_line(polygon[j], polygon[j + 1], c_border, 1);
 								}
@@ -2863,7 +2861,7 @@ void TileSetEditor::draw_polygon_shapes() {
 		}
 	}
 
-	if (creating_shape) {
+	if (creating_shape && current_shape.size() > 1) {
 		for (int j = 0; j < current_shape.size() - 1; j++) {
 			workspace->draw_line(current_shape[j], current_shape[j + 1], Color(0, 1, 1), 1);
 		}

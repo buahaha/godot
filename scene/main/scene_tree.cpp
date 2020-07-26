@@ -250,11 +250,7 @@ void SceneTree::call_group_flags(uint32_t p_call_flags, const StringName &p_grou
 			}
 
 			if (p_call_flags & GROUP_CALL_REALTIME) {
-				if (p_call_flags & GROUP_CALL_MULTILEVEL) {
-					nodes[i]->call_multilevel(p_function, VARIANT_ARG_PASS);
-				} else {
-					nodes[i]->call(p_function, VARIANT_ARG_PASS);
-				}
+				nodes[i]->call(p_function, VARIANT_ARG_PASS);
 			} else {
 				MessageQueue::get_singleton()->push_call(nodes[i], p_function, VARIANT_ARG_PASS);
 			}
@@ -267,11 +263,7 @@ void SceneTree::call_group_flags(uint32_t p_call_flags, const StringName &p_grou
 			}
 
 			if (p_call_flags & GROUP_CALL_REALTIME) {
-				if (p_call_flags & GROUP_CALL_MULTILEVEL) {
-					nodes[i]->call_multilevel(p_function, VARIANT_ARG_PASS);
-				} else {
-					nodes[i]->call(p_function, VARIANT_ARG_PASS);
-				}
+				nodes[i]->call(p_function, VARIANT_ARG_PASS);
 			} else {
 				MessageQueue::get_singleton()->push_call(nodes[i], p_function, VARIANT_ARG_PASS);
 			}
@@ -587,9 +579,11 @@ void SceneTree::_notification(int p_notification) {
 		case NOTIFICATION_OS_IME_UPDATE:
 		case NOTIFICATION_WM_ABOUT:
 		case NOTIFICATION_CRASH:
-		case NOTIFICATION_APP_RESUMED:
-		case NOTIFICATION_APP_PAUSED: {
-			get_root()->propagate_notification(p_notification);
+		case NOTIFICATION_APPLICATION_RESUMED:
+		case NOTIFICATION_APPLICATION_PAUSED:
+		case NOTIFICATION_APPLICATION_FOCUS_IN:
+		case NOTIFICATION_APPLICATION_FOCUS_OUT: {
+			get_root()->propagate_notification(p_notification); //pass these to nodes, since they are mirrored
 		} break;
 
 		default:
@@ -881,7 +875,7 @@ void SceneTree::_call_input_pause(const StringName &p_group, const StringName &p
 			continue;
 		}
 
-		n->call_multilevel(p_method, (const Variant **)v, 1);
+		n->call(p_method, (const Variant **)v, 1);
 		//ERR_FAIL_COND(node_count != g.nodes.size());
 	}
 
@@ -935,10 +929,6 @@ Variant SceneTree::_call_group(const Variant **p_args, int p_argcount, Callable:
 
 int64_t SceneTree::get_frame() const {
 	return current_frame;
-}
-
-int64_t SceneTree::get_event_count() const {
-	return current_event;
 }
 
 Array SceneTree::_get_nodes_in_group(const StringName &p_group) {
@@ -1360,7 +1350,6 @@ SceneTree::SceneTree() {
 	root = nullptr;
 	pause = false;
 	current_frame = 0;
-	current_event = 0;
 	tree_changed_name = "tree_changed";
 	node_added_name = "node_added";
 	node_removed_name = "node_removed";

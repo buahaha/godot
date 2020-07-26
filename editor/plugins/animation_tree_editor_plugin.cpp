@@ -79,7 +79,7 @@ void AnimationTreeEditor::_update_path() {
 	group.instance();
 
 	Button *b = memnew(Button);
-	b->set_text("root");
+	b->set_text("Root");
 	b->set_toggle_mode(true);
 	b->set_button_group(group);
 	b->set_pressed(true);
@@ -238,7 +238,7 @@ AnimationTreeEditor::AnimationTreeEditor() {
 	add_child(memnew(HSeparator));
 
 	singleton = this;
-	editor_base = memnew(PanelContainer);
+	editor_base = memnew(MarginContainer);
 	editor_base->set_v_size_flags(SIZE_EXPAND_FILL);
 	add_child(editor_base);
 

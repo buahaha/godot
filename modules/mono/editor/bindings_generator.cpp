@@ -45,7 +45,6 @@
 #include "../mono_gd/gd_mono_marshal.h"
 #include "../utils/path_utils.h"
 #include "../utils/string_utils.h"
-#include "csharp_project.h"
 
 #define CS_INDENT "    " // 4 whitespaces
 
@@ -62,10 +61,8 @@
 
 #define OPEN_BLOCK_L2 INDENT2 OPEN_BLOCK INDENT3
 #define OPEN_BLOCK_L3 INDENT3 OPEN_BLOCK INDENT4
-#define OPEN_BLOCK_L4 INDENT4 OPEN_BLOCK INDENT5
 #define CLOSE_BLOCK_L2 INDENT2 CLOSE_BLOCK
 #define CLOSE_BLOCK_L3 INDENT3 CLOSE_BLOCK
-#define CLOSE_BLOCK_L4 INDENT4 CLOSE_BLOCK
 
 #define CS_FIELD_MEMORYOWN "memoryOwn"
 #define CS_PARAM_METHODBIND "method"

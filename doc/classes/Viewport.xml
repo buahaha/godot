@@ -315,7 +315,7 @@
 			Do not perform any antialiasing in the full screen post-process.
 		</constant>
 		<constant name="SCREEN_SPACE_AA_FXAA" value="1" enum="ScreenSpaceAA">
-			Use fast approximate antialiasing. FXAA is a popular screen-space antialising method, which is fast but will make the image look blurry, especially at lower resolutions. It can still work relatively well at large resolutions such as 1440p and 4K.
+			Use fast approximate antialiasing. FXAA is a popular screen-space antialiasing method, which is fast but will make the image look blurry, especially at lower resolutions. It can still work relatively well at large resolutions such as 1440p and 4K.
 		</constant>
 		<constant name="SCREEN_SPACE_AA_MAX" value="2" enum="ScreenSpaceAA">
 			Represents the size of the [enum ScreenSpaceAA] enum.
@@ -377,14 +377,17 @@
 		<constant name="DEBUG_DRAW_SSAO" value="12" enum="DebugDraw">
 			Draws the screen-space ambient occlusion texture instead of the scene so that you can clearly see how it is affecting objects. In order for this display mode to work, you must have [member Environment.ssao_enabled] set in your [WorldEnvironment].
 		</constant>
-		<constant name="DEBUG_DRAW_ROUGHNESS_LIMITER" value="13" enum="DebugDraw">
-			Draws the roughness limiter post process over the Viewport so you can see where it has an effect. It must be enabled in [member ProjectSettings.rendering/quality/screen_filters/screen_space_roughness_limiter] to work.
-		</constant>
-		<constant name="DEBUG_DRAW_PSSM_SPLITS" value="14" enum="DebugDraw">
+		<constant name="DEBUG_DRAW_PSSM_SPLITS" value="13" enum="DebugDraw">
 			Colors each PSSM split for the [DirectionalLight3D]s in the scene a different color so you can see where the splits are. In order, they will be colored red, green, blue, and yellow.
 		</constant>
-		<constant name="DEBUG_DRAW_DECAL_ATLAS" value="15" enum="DebugDraw">
+		<constant name="DEBUG_DRAW_DECAL_ATLAS" value="14" enum="DebugDraw">
 			Draws the decal atlas used by [Decal]s and light projector textures in the upper left quadrant of the [Viewport].
+		</constant>
+		<constant name="DEBUG_DRAW_SDFGI" value="15" enum="DebugDraw">
+		</constant>
+		<constant name="DEBUG_DRAW_SDFGI_PROBES" value="16" enum="DebugDraw">
+		</constant>
+		<constant name="DEBUG_DRAW_GI_BUFFER" value="17" enum="DebugDraw">
 		</constant>
 		<constant name="DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST" value="0" enum="DefaultCanvasItemTextureFilter">
 			The texture filter reads from the nearest pixel only. The simplest and fastest method of filtering, but the texture will look pixelized.

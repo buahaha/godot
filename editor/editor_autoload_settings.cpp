@@ -477,6 +477,8 @@ void EditorAutoloadSettings::update_autoload() {
 			info.node->queue_delete();
 			info.node = nullptr;
 		}
+
+		ProjectSettings::get_singleton()->remove_autoload(info.name);
 	}
 
 	// Load new/changed autoloads
@@ -502,6 +504,12 @@ void EditorAutoloadSettings::update_autoload() {
 				ScriptServer::get_language(i)->add_named_global_constant(info->name, info->node);
 			}
 		}
+
+		ProjectSettings::AutoloadInfo prop_info;
+		prop_info.name = info->name;
+		prop_info.path = info->path;
+		prop_info.is_singleton = info->is_singleton;
+		ProjectSettings::get_singleton()->add_autoload(prop_info);
 
 		if (!info->in_editor && !info->is_singleton) {
 			// No reason to keep this node
@@ -680,12 +688,12 @@ bool EditorAutoloadSettings::autoload_add(const String &p_name, const String &p_
 
 	const String &path = p_path;
 	if (!FileAccess::exists(path)) {
-		EditorNode::get_singleton()->show_warning(TTR("Can't add autoload:") + "\n" + TTR(vformat("%s is an invalid path. File does not exist.", path)));
+		EditorNode::get_singleton()->show_warning(TTR("Can't add autoload:") + "\n" + vformat(TTR("%s is an invalid path. File does not exist."), path));
 		return false;
 	}
 
 	if (!path.begins_with("res://")) {
-		EditorNode::get_singleton()->show_warning(TTR("Can't add autoload:") + "\n" + TTR(vformat("%s is an invalid path. Not in resource path (res://).", path)));
+		EditorNode::get_singleton()->show_warning(TTR("Can't add autoload:") + "\n" + vformat(TTR("%s is an invalid path. Not in resource path (res://)."), path));
 		return false;
 	}
 
@@ -911,5 +919,5 @@ void EditorAutoloadSettings::_set_autoload_add_path(const String &p_text) {
 }
 
 void EditorAutoloadSettings::_browse_autoload_add_path() {
-	file_dialog->popup_centered_ratio();
+	file_dialog->popup_file_dialog();
 }

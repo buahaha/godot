@@ -30,6 +30,7 @@
 
 #include "image.h"
 
+#include "core/error_macros.h"
 #include "core/hash_map.h"
 #include "core/io/image_loader.h"
 #include "core/io/resource_loader.h"
@@ -1894,8 +1895,10 @@ Vector<uint8_t> Image::get_data() const {
 }
 
 void Image::create(int p_width, int p_height, bool p_use_mipmaps, Format p_format) {
-	ERR_FAIL_INDEX(p_width - 1, MAX_WIDTH);
-	ERR_FAIL_INDEX(p_height - 1, MAX_HEIGHT);
+	ERR_FAIL_COND_MSG(p_width <= 0, "Image width must be greater than 0.");
+	ERR_FAIL_COND_MSG(p_height <= 0, "Image height must be greater than 0.");
+	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH, "Image width cannot be greater than " + itos(MAX_WIDTH) + ".");
+	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT, "Image height cannot be greater than " + itos(MAX_HEIGHT) + ".");
 	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS, "Too many pixels for image, maximum is " + itos(MAX_PIXELS));
 
 	int mm = 0;
@@ -1914,8 +1917,10 @@ void Image::create(int p_width, int p_height, bool p_use_mipmaps, Format p_forma
 }
 
 void Image::create(int p_width, int p_height, bool p_use_mipmaps, Format p_format, const Vector<uint8_t> &p_data) {
-	ERR_FAIL_INDEX(p_width - 1, MAX_WIDTH);
-	ERR_FAIL_INDEX(p_height - 1, MAX_HEIGHT);
+	ERR_FAIL_COND_MSG(p_width <= 0, "Image width must be greater than 0.");
+	ERR_FAIL_COND_MSG(p_height <= 0, "Image height must be greater than 0.");
+	ERR_FAIL_COND_MSG(p_width > MAX_WIDTH, "Image width cannot be greater than " + itos(MAX_WIDTH) + ".");
+	ERR_FAIL_COND_MSG(p_height > MAX_HEIGHT, "Image height cannot be greater than " + itos(MAX_HEIGHT) + ".");
 	ERR_FAIL_COND_MSG(p_width * p_height > MAX_PIXELS, "Too many pixels for image, maximum is " + itos(MAX_PIXELS));
 
 	int mm;
@@ -2629,6 +2634,7 @@ void Image::fill(const Color &c) {
 ImageMemLoadFunc Image::_png_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_jpg_mem_loader_func = nullptr;
 ImageMemLoadFunc Image::_webp_mem_loader_func = nullptr;
+ImageMemLoadFunc Image::_tga_mem_loader_func = nullptr;
 
 void (*Image::_image_compress_bc_func)(Image *, float, Image::UsedChannels) = nullptr;
 void (*Image::_image_compress_bptc_func)(Image *, float, Image::UsedChannels) = nullptr;
@@ -3058,6 +3064,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("load_png_from_buffer", "buffer"), &Image::load_png_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_jpg_from_buffer", "buffer"), &Image::load_jpg_from_buffer);
 	ClassDB::bind_method(D_METHOD("load_webp_from_buffer", "buffer"), &Image::load_webp_from_buffer);
+	ClassDB::bind_method(D_METHOD("load_tga_from_buffer", "buffer"), &Image::load_tga_from_buffer);
 
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "data", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE), "_set_data", "_get_data");
 
@@ -3387,6 +3394,11 @@ Error Image::load_jpg_from_buffer(const Vector<uint8_t> &p_array) {
 
 Error Image::load_webp_from_buffer(const Vector<uint8_t> &p_array) {
 	return _load_from_buffer(p_array, _webp_mem_loader_func);
+}
+
+Error Image::load_tga_from_buffer(const Vector<uint8_t> &p_array) {
+	ERR_FAIL_NULL_V_MSG(_tga_mem_loader_func, ERR_UNAVAILABLE, "TGA module was not installed.");
+	return _load_from_buffer(p_array, _tga_mem_loader_func);
 }
 
 void Image::convert_rg_to_ra_rgba8() {

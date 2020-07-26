@@ -55,15 +55,13 @@ void Node::_notification(int p_notification) {
 		case NOTIFICATION_PROCESS: {
 			if (get_script_instance()) {
 				Variant time = get_process_delta_time();
-				const Variant *ptr[1] = { &time };
-				get_script_instance()->call_multilevel(SceneStringNames::get_singleton()->_process, ptr, 1);
+				get_script_instance()->call(SceneStringNames::get_singleton()->_process, time);
 			}
 		} break;
 		case NOTIFICATION_PHYSICS_PROCESS: {
 			if (get_script_instance()) {
 				Variant time = get_physics_process_delta_time();
-				const Variant *ptr[1] = { &time };
-				get_script_instance()->call_multilevel(SceneStringNames::get_singleton()->_physics_process, ptr, 1);
+				get_script_instance()->call(SceneStringNames::get_singleton()->_physics_process, time);
 			}
 
 		} break;
@@ -146,7 +144,7 @@ void Node::_notification(int p_notification) {
 					set_physics_process(true);
 				}
 
-				get_script_instance()->call_multilevel_reversed(SceneStringNames::get_singleton()->_ready, nullptr, 0);
+				get_script_instance()->call(SceneStringNames::get_singleton()->_ready);
 			}
 
 		} break;
@@ -216,7 +214,7 @@ void Node::_propagate_enter_tree() {
 	notification(NOTIFICATION_ENTER_TREE);
 
 	if (get_script_instance()) {
-		get_script_instance()->call_multilevel_reversed(SceneStringNames::get_singleton()->_enter_tree, nullptr, 0);
+		get_script_instance()->call(SceneStringNames::get_singleton()->_enter_tree);
 	}
 
 	emit_signal(SceneStringNames::get_singleton()->tree_entered);
@@ -264,7 +262,7 @@ void Node::_propagate_exit_tree() {
 	data.blocked--;
 
 	if (get_script_instance()) {
-		get_script_instance()->call_multilevel(SceneStringNames::get_singleton()->_exit_tree, nullptr, 0);
+		get_script_instance()->call(SceneStringNames::get_singleton()->_exit_tree);
 	}
 	emit_signal(SceneStringNames::get_singleton()->tree_exiting);
 
@@ -1060,7 +1058,7 @@ void Node::_validate_child_name(Node *p_child, bool p_force_human_readable) {
 
 		bool unique = true;
 
-		if (p_child->data.name == StringName() || p_child->data.name.operator String()[0] == '@') {
+		if (p_child->data.name == StringName()) {
 			//new unique name must be assigned
 			unique = false;
 		} else {
@@ -2857,8 +2855,8 @@ void Node::_bind_methods() {
 
 	BIND_CONSTANT(NOTIFICATION_WM_MOUSE_ENTER);
 	BIND_CONSTANT(NOTIFICATION_WM_MOUSE_EXIT);
-	BIND_CONSTANT(NOTIFICATION_WM_FOCUS_IN);
-	BIND_CONSTANT(NOTIFICATION_WM_FOCUS_OUT);
+	BIND_CONSTANT(NOTIFICATION_WM_WINDOW_FOCUS_IN);
+	BIND_CONSTANT(NOTIFICATION_WM_WINDOW_FOCUS_OUT);
 	BIND_CONSTANT(NOTIFICATION_WM_CLOSE_REQUEST);
 	BIND_CONSTANT(NOTIFICATION_WM_GO_BACK_REQUEST);
 	BIND_CONSTANT(NOTIFICATION_WM_SIZE_CHANGED);
@@ -2867,8 +2865,10 @@ void Node::_bind_methods() {
 	BIND_CONSTANT(NOTIFICATION_WM_ABOUT);
 	BIND_CONSTANT(NOTIFICATION_CRASH);
 	BIND_CONSTANT(NOTIFICATION_OS_IME_UPDATE);
-	BIND_CONSTANT(NOTIFICATION_APP_RESUMED);
-	BIND_CONSTANT(NOTIFICATION_APP_PAUSED);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_RESUMED);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_PAUSED);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_FOCUS_IN);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_FOCUS_OUT);
 
 	BIND_ENUM_CONSTANT(PAUSE_MODE_INHERIT);
 	BIND_ENUM_CONSTANT(PAUSE_MODE_STOP);

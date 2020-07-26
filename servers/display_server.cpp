@@ -31,6 +31,7 @@
 #include "display_server.h"
 
 #include "core/input/input.h"
+#include "core/method_bind_ext.gen.inc"
 #include "scene/resources/texture.h"
 
 DisplayServer *DisplayServer::singleton = nullptr;
@@ -181,8 +182,12 @@ bool DisplayServer::screen_is_kept_on() const {
 	return false;
 }
 
-DisplayServer::WindowID DisplayServer::create_sub_window(WindowMode p_mode, uint32_t p_flags, const Rect2i &) {
+DisplayServer::WindowID DisplayServer::create_sub_window(WindowMode p_mode, uint32_t p_flags, const Rect2i &p_rect) {
 	ERR_FAIL_V_MSG(INVALID_WINDOW_ID, "Sub-windows not supported by this display server.");
+}
+
+void DisplayServer::show_window(WindowID p_id) {
+	ERR_FAIL_MSG("Sub-windows not supported by this display server.");
 }
 
 void DisplayServer::delete_sub_window(WindowID p_id) {
@@ -213,7 +218,7 @@ bool DisplayServer::is_console_visible() const {
 	return false;
 }
 
-void DisplayServer::virtual_keyboard_show(const String &p_existing_text, const Rect2 &p_screen_rect, int p_max_length, int p_cursor_start, int p_cursor_end) {
+void DisplayServer::virtual_keyboard_show(const String &p_existing_text, const Rect2 &p_screen_rect, bool p_multiline, int p_max_length, int p_cursor_start, int p_cursor_end) {
 	WARN_PRINT("Virtual keyboard not supported by this display server.");
 }
 
@@ -223,7 +228,7 @@ void DisplayServer::virtual_keyboard_hide() {
 
 // returns height of the currently shown keyboard (0 if keyboard is hidden)
 int DisplayServer::virtual_keyboard_get_height() const {
-	ERR_FAIL_V_MSG(0, "Virtual keyboad not supported by this display server.");
+	ERR_FAIL_V_MSG(0, "Virtual keyboard not supported by this display server.");
 }
 
 void DisplayServer::cursor_set_shape(CursorShape p_shape) {
@@ -238,7 +243,7 @@ void DisplayServer::cursor_set_custom_image(const RES &p_cursor, CursorShape p_s
 	WARN_PRINT("Custom cursor shape not supported by this display server.");
 }
 
-bool DisplayServer::get_swap_ok_cancel() {
+bool DisplayServer::get_swap_cancel_ok() {
 	return false;
 }
 
@@ -392,6 +397,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("screen_get_dpi", "screen"), &DisplayServer::screen_get_dpi, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_get_scale", "screen"), &DisplayServer::screen_get_scale, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_is_touchscreen", "screen"), &DisplayServer::screen_is_touchscreen, DEFVAL(SCREEN_OF_MAIN_WINDOW));
+	ClassDB::bind_method(D_METHOD("screen_get_max_scale"), &DisplayServer::screen_get_max_scale);
 
 	ClassDB::bind_method(D_METHOD("screen_set_orientation", "orientation", "screen"), &DisplayServer::screen_set_orientation, DEFVAL(SCREEN_OF_MAIN_WINDOW));
 	ClassDB::bind_method(D_METHOD("screen_get_orientation", "screen"), &DisplayServer::screen_get_orientation, DEFVAL(SCREEN_OF_MAIN_WINDOW));
@@ -402,7 +408,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_window_list"), &DisplayServer::get_window_list);
 	ClassDB::bind_method(D_METHOD("get_window_at_screen_position", "position"), &DisplayServer::get_window_at_screen_position);
 
-	ClassDB::bind_method(D_METHOD("create_sub_window", "mode", "rect"), &DisplayServer::create_sub_window, DEFVAL(Rect2i()));
+	ClassDB::bind_method(D_METHOD("create_sub_window", "mode", "flags", "rect"), &DisplayServer::create_sub_window, DEFVAL(Rect2i()));
 	ClassDB::bind_method(D_METHOD("delete_sub_window", "window_id"), &DisplayServer::delete_sub_window);
 
 	ClassDB::bind_method(D_METHOD("window_set_title", "title", "window_id"), &DisplayServer::window_set_title, DEFVAL(MAIN_WINDOW_ID));
@@ -454,7 +460,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("console_set_visible", "console_visible"), &DisplayServer::console_set_visible);
 	ClassDB::bind_method(D_METHOD("is_console_visible"), &DisplayServer::is_console_visible);
 
-	ClassDB::bind_method(D_METHOD("virtual_keyboard_show", "existing_text", "position", "max_length", "cursor_start", "cursor_end"), &DisplayServer::virtual_keyboard_show, DEFVAL(Rect2i()), DEFVAL(-1), DEFVAL(-1), DEFVAL(-1));
+	ClassDB::bind_method(D_METHOD("virtual_keyboard_show", "existing_text", "position", "multiline", "max_length", "cursor_start", "cursor_end"), &DisplayServer::virtual_keyboard_show, DEFVAL(Rect2i()), DEFVAL(false), DEFVAL(-1), DEFVAL(-1), DEFVAL(-1));
 	ClassDB::bind_method(D_METHOD("virtual_keyboard_hide"), &DisplayServer::virtual_keyboard_hide);
 
 	ClassDB::bind_method(D_METHOD("virtual_keyboard_get_height"), &DisplayServer::virtual_keyboard_get_height);
@@ -463,7 +469,7 @@ void DisplayServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("cursor_get_shape"), &DisplayServer::cursor_get_shape);
 	ClassDB::bind_method(D_METHOD("cursor_set_custom_image", "cursor", "shape", "hotspot"), &DisplayServer::cursor_set_custom_image, DEFVAL(CURSOR_ARROW), DEFVAL(Vector2()));
 
-	ClassDB::bind_method(D_METHOD("get_swap_ok_cancel"), &DisplayServer::get_swap_ok_cancel);
+	ClassDB::bind_method(D_METHOD("get_swap_cancel_ok"), &DisplayServer::get_swap_cancel_ok);
 
 	ClassDB::bind_method(D_METHOD("enable_for_stealing_focus", "process_id"), &DisplayServer::enable_for_stealing_focus);
 

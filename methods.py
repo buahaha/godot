@@ -92,7 +92,7 @@ def update_version(module_version_string=""):
             gitfolder = module_folder[8:]
 
     if os.path.isfile(os.path.join(gitfolder, "HEAD")):
-        head = open(os.path.join(gitfolder, "HEAD"), "r").readline().strip()
+        head = open(os.path.join(gitfolder, "HEAD"), "r", encoding="utf8").readline().strip()
         if head.startswith("ref: "):
             head = os.path.join(gitfolder, head[5:])
             if os.path.isfile(head):
@@ -217,14 +217,15 @@ void unregister_module_types() {
 def convert_custom_modules_path(path):
     if not path:
         return path
+    path = os.path.realpath(os.path.expanduser(os.path.expandvars(path)))
     err_msg = "Build option 'custom_modules' must %s"
     if not os.path.isdir(path):
         raise ValueError(err_msg % "point to an existing directory.")
-    if os.path.realpath(path) == os.path.realpath("modules"):
+    if path == os.path.realpath("modules"):
         raise ValueError(err_msg % "be a directory other than built-in `modules` directory.")
     if is_module(path):
         raise ValueError(err_msg % "point to a directory with modules, not a single module.")
-    return os.path.realpath(os.path.expanduser(path))
+    return path
 
 
 def disable_module(self):
@@ -548,15 +549,18 @@ def generate_vs_project(env, num_jobs):
         # in a backslash, so we need to remove this, lest it escape the
         # last double quote off, confusing MSBuild
         env["MSVSBUILDCOM"] = build_commandline(
-            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" platform=windows progress=no target=$(Configuration) tools=!tools! -j"
+            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" platform=windows progress=no target=$(Configuration)"
+            " tools=!tools! -j"
             + str(num_jobs)
         )
         env["MSVSREBUILDCOM"] = build_commandline(
-            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" platform=windows progress=no target=$(Configuration) tools=!tools! vsproj=yes -j"
+            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" platform=windows progress=no target=$(Configuration)"
+            " tools=!tools! vsproj=yes -j"
             + str(num_jobs)
         )
         env["MSVSCLEANCOM"] = build_commandline(
-            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" --clean platform=windows progress=no target=$(Configuration) tools=!tools! -j"
+            "scons --directory=\"$(ProjectDir.TrimEnd('\\'))\" --clean platform=windows progress=no"
+            " target=$(Configuration) tools=!tools! -j"
             + str(num_jobs)
         )
 
